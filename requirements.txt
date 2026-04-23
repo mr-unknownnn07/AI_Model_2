@@ -1,6 +1,6 @@
 flask
 numpy
 pillow
-tensorflow-cpu
-tf-keras
-gunicorn
+tensorflow-cpu==2.15.0
+tf-keras==2.15.0
+Werkzeug
