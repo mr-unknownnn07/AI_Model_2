@@ -42,18 +42,6 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
-# Serve the UI (Home Page)
-@app.route("/")
-def home():
-    return send_from_directory(UI_DIR, "index.html")
-
-# Serve other HTML files (detect.html, treatment.html, etc.)
-@app.route("/<path:path>")
-def serve_static(path):
-    if path.endswith(".html"):
-        return send_from_directory(UI_DIR, path)
-    return send_from_directory(UI_DIR, path)
-
 @app.route("/predict", methods=["POST"])
 def predict():
     if model is None:
@@ -76,7 +64,7 @@ def predict():
     confidence      = float(predictions[predicted_index])
 
     all_scores = {LABELS[i]: round(float(predictions[i]) * 100, 2)
-                  for i in range(len(LABELS))}
+                   for i in range(len(LABELS))}
 
     # Format label for frontend mapping (Healthy, Viral Disease, etc.)
     def format_label(lbl):
@@ -91,6 +79,18 @@ def predict():
         "confidence": round(confidence * 100, 2),
         "all_scores": {format_label(k): v for k, v in all_scores.items()}
     })
+
+# Serve the UI (Home Page)
+@app.route("/")
+def home():
+    return send_from_directory(UI_DIR, "index.html")
+
+# Serve other HTML files (detect.html, treatment.html, etc.)
+@app.route("/<path:path>")
+def serve_static(path):
+    if path.endswith(".html"):
+        return send_from_directory(UI_DIR, path)
+    return send_from_directory(UI_DIR, path)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)
