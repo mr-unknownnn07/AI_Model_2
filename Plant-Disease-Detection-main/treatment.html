@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disease Treatments & Cures — PlantCure AI</title>
+  <meta name="description"
+    content="Comprehensive plant disease treatment guide. Natural remedies, medicinal treatments, and medicine recommendations for 38+ plant diseases." />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .treatment-page {
+      padding-top: var(--nav-height);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+    }
+
+    /* ─── Disease Sidebar ─── */
+    .disease-sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      position: sticky;
+      top: var(--nav-height);
+      height: calc(100vh - var(--nav-height));
+      overflow-y: auto;
+    }
+
+    .search-box {
+      margin-bottom: 16px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: .85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-box input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, .1);
+    }
+
+    .disease-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      margin-bottom: 4px;
+    }
+
+    .disease-list-item:hover {
+      background: rgba(34, 197, 94, .08);
+      color: var(--text-primary);
+    }
+
+    .disease-list-item.active {
+      background: rgba(34, 197, 94, .15);
+      border-left: 3px solid var(--green-500);
+      color: var(--green-400);
+    }
+
+    .disease-item-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .disease-item-name {
+      font-size: .85rem;
+      font-weight: 600;
+    }
+
+    .disease-item-severity {
+      margin-left: auto;
+      font-size: .65rem;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+    }
+
+    .sev-none {
+      background: rgba(34, 197, 94, .15);
+      color: var(--green-400);
+    }
+
+    .sev-moderate {
+      background: rgba(250, 204, 21, .12);
+      color: var(--yellow-400);
+    }
+
+    .sev-high {
+      background: rgba(239, 68, 68, .12);
+      color: var(--red-400);
+    }
+
+    .sev-critical {
+      background: rgba(239, 68, 68, .2);
+      color: #ff4444;
+    }
+
+    /* ─── Detail Area ─── */
+    .treatment-detail {
+      padding: 40px 5%;
+      max-width: 900px;
+    }
+
+    .disease-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .disease-big-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, rgba(34, 197, 94, .2), rgba(34, 197, 94, .05));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      flex-shrink: 0;
+    }
+
+    .disease-header-content {
+      flex: 1;
+    }
+
+    .disease-header h2 {
+      margin-bottom: 8px;
+    }
+
+    .disease-header p {
+      font-size: .95rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .disease-header-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    /* ─── Tabs ─── */
+    .treatment-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: var(--bg-input);
+      padding: 5px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .treat-tab {
+      padding: 9px 22px;
+      border-radius: var(--radius-full);
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: var(--transition-fast);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+    }
+
+    .treat-tab.active {
+      background: linear-gradient(135deg, var(--green-700), var(--green-600));
+      color: #fff;
+      box-shadow: var(--shadow-glow-sm);
+    }
+
+    /* ─── Tab Content Sections ─── */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn .3s ease;
+    }
+
+    /* Overview */
+    .symptoms-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .symptom-tag {
+      padding: 10px 14px;
+      background: rgba(239, 68, 68, .06);
+      border: 1px solid rgba(239, 68, 68, .15);
+      border-radius: var(--radius);
+      font-size: .85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .conditions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .condition-item {
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border-radius: var(--radius);
+      font-size: .85rem;
+      border-left: 3px solid var(--green-700);
+    }
+
+    .condition-label {
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 4px;
+    }
+
+    /* Natural Remedies */
+    .remedy-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      transition: var(--transition);
+    }
+
+    .remedy-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .remedy-num {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--green-700), var(--green-600));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .9rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .remedy-text {
+      font-size: .9rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* Medicines */
+    .medicine-detail-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(96, 165, 250, .15);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+      transition: var(--transition);
+    }
+
+    .medicine-detail-card:hover {
+      border-color: rgba(96, 165, 250, .3);
+    }
+
+    .med-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .med-icon {
+      font-size: 1.8rem;
+    }
+
+    .med-detail-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .med-specs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .med-spec {
+      padding: 8px 12px;
+      background: rgba(96, 165, 250, .05);
+      border-radius: var(--radius);
+      font-size: .82rem;
+    }
+
+    .med-spec-key {
+      color: var(--text-dim);
+      margin-bottom: 2px;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .med-spec-val {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .med-buy-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    /* Tips */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tip-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .88rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .tip-row .tip-num {
+      width: 28px;
+      height: 28px;
+      background: rgba(34, 197, 94, .15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--green-400);
+      flex-shrink: 0;
+    }
+
+    .no-disease-selected {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+
+    .no-disease-selected .icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @media (max-width: 900px) {
+      .treatment-page {
+        grid-template-columns: 1fr;
+      }
+
+      .disease-sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .symptoms-grid,
+      .conditions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .medicine-detail-card {
+        grid-template-columns: 1fr;
+      }
+
+      .med-buy-col {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page-loader" id="page-loader">
+    <div class="loader-logo">💊</div>
+    <div class="spinner"></div>
+    <div class="loader-text">LOADING TREATMENTS</div>
+  </div>
+
+  <!-- ═══ Navbar ═══ -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🌿</div>
+      Plant<span class="accent">Cure</span> AI
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html" data-i18n="nav_home">Home</a></li>
+      <li><a href="detect.html" data-i18n="nav_detect">AI Detector</a></li>
+      <li><a href="treatment.html" class="active" data-i18n="nav_treatment">Treatment</a></li>
+      <li><a href="shop.html" data-i18n="nav_shop">Shop</a></li>
+      <li><a href="community.html" data-i18n="nav_community">Community</a></li>
+      <li><a href="detect.html" class="nav-cta">🔬 Detect Disease</a></li>
+    </ul>
+    <div class="nav-controls">
+      <button class="nav-icon-btn" id="theme-btn">🌙</button>
+      <button class="lang-btn" id="lang-btn">🌐 <span>हिंदी</span></button>
+      <button class="nav-hamburger" id="nav-hamburger"
+        aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <div class="treatment-page">
+
+    <!-- ─── Disease Sidebar ─── -->
+    <aside class="disease-sidebar">
+      <div class="search-box">
+        <input type="text" id="disease-search" placeholder="🔍 Search disease..." />
+      </div>
+      <div
+        style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:10px;padding:0 4px;">
+        All Diseases</div>
+      <div id="disease-list">
+        <!-- Populated by JS -->
+      </div>
+    </aside>
+
+    <!-- ─── Treatment Detail ─── -->
+    <main class="treatment-detail" id="treatment-detail">
+      <div class="no-disease-selected" id="no-disease-msg">
+        <div class="icon">🌿</div>
+        <h3>Select a Disease</h3>
+        <p style="margin-top:8px;font-size:.9rem;">Choose a disease from the sidebar to view its detailed treatment
+          guide, natural remedies, and medicine recommendations.</p>
+        <a href="detect.html" class="btn btn-primary" style="margin-top:20px;">🔬 Detect Your Plant First</a>
+      </div>
+      <div id="disease-detail" class="hidden"></div>
+    </main>
+
+  </div>
+
+  <!-- ─── Footer ─── -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon">🌿</div>Plant<span class="accent">Cure</span> AI
+        </a>
+        <p>Comprehensive plant disease treatment database with natural and medicinal solutions.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="detect.html">AI Detector</a></li>
+          <li><a href="treatment.html">Treatment Guide</a></li>
+          <li><a href="shop.html">Medicine Shop</a></li>
+          <li><a href="community.html">Community</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p data-i18n="footer_copy">© 2025 PlantCure AI. Made with ❤️ for farmers.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    /* ═══════════════════════════════════
+       Treatment Page — Full JS
+    ═══════════════════════════════════ */
+
+    /* Disease Database (full) */
+    const DISEASES = [
+      {
+        id: 'healthy',
+        name: 'Healthy Plant',
+        icon: '✅',
+        severity: 'none',
+        description: 'Your plant appears to be in excellent health. No signs of disease, pest damage, or nutrient deficiency detected.',
+        cause: 'N/A — plant is healthy',
+        plants: 'All plants',
+        season: 'Year-round',
+        spreadRate: 'N/A',
+        symptoms: ['Vibrant green color', 'No spots or lesions', 'Normal leaf shape', 'Firm stems', 'Healthy root system'],
+        naturalRemedies: [
+          'Apply neem oil spray monthly as a preventive measure against pests and fungal diseases.',
+          'Water at the base of the plant; avoid wetting leaves to prevent fungal growth.',
+          'Ensure 6–8 hours of direct sunlight daily for most vegetable crops.',
+          'Add a layer of organic compost around the root zone every 2–3 months.',
+          'Prune dead or yellowing leaves weekly to improve airflow and redirect nutrients.',
+        ],
+        medicines: [],
+        prevention: ['Rotate crops every season', 'Use disease-resistant varieties', 'Maintain proper spacing', 'Sterilize gardening tools'],
+        tips: ['Monitor plants weekly for any changes', 'Feed with balanced NPK fertilizer', 'Keep soil pH between 6.0–7.0', 'Use mulch to retain moisture'],
+      },
+      {
+        id: 'powdery-mildew',
+        name: 'Powdery Mildew',
+        icon: '🌫️',
+        severity: 'moderate',
+        description: 'A widespread fungal disease that creates distinctive white, powdery spots on leaves, stems, and buds. Thrives in warm, dry weather with cool nights.',
+        cause: 'Fungal pathogens (Erysiphales order)',
+        plants: 'Roses, cucumbers, squash, grapes, peas',
+        season: 'Spring-Summer, warm-dry periods',
+        spreadRate: 'Moderate — airborne spores',
+        symptoms: ['White or gray powdery coating on leaf surface', 'Distorted or stunted new growth', 'Yellowing of affected leaf areas', 'Premature leaf drop in severe cases', 'Curling of infected leaves'],
+        naturalRemedies: [
+          'Baking soda spray: Mix 1 tbsp baking soda + 2-3 drops of neem oil + 1 drop dish soap in 1 liter water. Spray every 5 days.',
+          'Garlic extract: Blend 5 garlic cloves in 500ml water, filter through cloth, spray directly on affected areas twice weekly.',
+          'Diluted milk spray (1 part milk : 10 parts water) — proven effective in controlled studies.',
+          'Neem oil spray (2ml per liter) every 7 days as both treatment and prevention.',
+          'Remove and destroy all infected leaves immediately. Never compost them.',
+        ],
+        medicines: [
+          { name: 'Sulfex 80 WP', type: 'Sulfur-based Fungicide', dose: '2g per liter water', freq: 'Every 7 days', price: '₹280', rating: '4.8' },
+          { name: 'Milstop', type: 'Potassium Bicarbonate', dose: '1.5g per liter water', freq: 'Every 10 days', price: '₹340', rating: '4.6' },
+          { name: 'Rally 40 WP', type: 'Myclobutanil Fungicide', dose: 'As per label', freq: 'Every 14 days', price: '₹520', rating: '4.9' },
+        ],
+        prevention: ['Ensure good air circulation between plants', 'Avoid overhead watering', 'Plant in sunny locations', 'Use resistant cultivars'],
+        tips: ['Symptoms worsen with high humidity at night', 'Apply sprays in early morning or evening, not in direct sun', 'Rotate fungicides to prevent resistance', 'Remove plant debris from garden bed'],
+      },
+      {
+        id: 'leaf-blight',
+        name: 'Leaf Blight',
+        icon: '🍂',
+        severity: 'high',
+        description: 'A destructive fungal or bacterial disease causing large brown, water-soaked lesions that spread rapidly across leaves, stems, and fruit.',
+        cause: 'Phytophthora, Alternaria, or bacterial pathogens',
+        plants: 'Tomatoes, potatoes, peppers, eggplant',
+        season: 'Monsoon, wet and humid periods',
+        spreadRate: 'Very fast — water splash, wind',
+        symptoms: ['Large brown or black water-soaked spots', 'Rapid spreading of lesions across leaf', 'Dark margins around spots', 'Premature defoliation', 'Stem lesions in advanced cases'],
+        naturalRemedies: [
+          'Copper sulfate solution: Dissolve 2g in 1 liter water. Spray thoroughly on all plant surfaces every 5–7 days.',
+          'Trichoderma viride bio-fungicide: Mix in soil around roots as preventive biological control.',
+          'Remove and burn all infected plant material immediately. Never compost blighted material.',
+          'Apply wood ash around plant base to create alkaline barrier that discourages spread.',
+        ],
+        medicines: [
+          { name: 'Dithane M-45', type: 'Mancozeb 75 WP', dose: '2.5g per liter', freq: 'Every 7 days', price: '₹180', rating: '4.7' },
+          { name: 'Blitox 50 WP', type: 'Copper Oxychloride', dose: '3g per liter', freq: 'Every 10 days', price: '₹150', rating: '4.5' },
+          { name: 'Kavach 75 WP', type: 'Chlorothalonil', dose: '2g per liter', freq: 'Every 10 days', price: '₹220', rating: '4.6' },
+        ],
+        prevention: ['Stake plants to improve air circulation', 'Avoid working in wet fields', 'Apply fungicide preventively in rainy season', 'Use drip irrigation instead of overhead'],
+        tips: ['Blight spreads fastest in warm, wet weather', 'Late blight (Phytophthora) needs urgent action — spreads in 24 hrs', 'Apply before rain, not after', 'Destroy all crop debris after harvest'],
+      },
+      {
+        id: 'black-spot',
+        name: 'Black Spot',
+        icon: '⚫',
+        severity: 'high',
+        description: 'A classic fungal disease primarily affecting roses. Causes distinctive circular black spots with yellow halos, leading to severe leaf drop.',
+        cause: 'Diplocarpon rosae fungus',
+        plants: 'Roses (primarily), some fruits',
+        season: 'Spring and Summer, wet conditions',
+        spreadRate: 'Moderate — rain-splashed spores',
+        symptoms: ['Circular black spots (5–15mm) with fringed margins', 'Yellow halo around each black spot', 'Leaf yellowing around affected area', 'Premature and severe leaf drop', 'Weakened, leggy plant growth'],
+        naturalRemedies: [
+          'Baking soda + neem oil spray: 1 tbsp baking soda + 1 tsp neem oil + 1 drop dish soap per liter. Spray every 5–7 days.',
+          'Remove and bag ALL infected leaves immediately — do not compost.',
+          'Compost tea spray (1:10 diluted) can boost plant immunity.',
+          'Apply banana peel compost — high potassium strengthens cell walls.',
+        ],
+        medicines: [
+          { name: 'Folicur EC 25', type: 'Tebuconazole', dose: '1ml per liter', freq: 'Every 14 days', price: '₹680', rating: '4.8' },
+          { name: 'Tilt 25 EC', type: 'Propiconazole', dose: '1ml per liter', freq: 'Every 14 days', price: '₹420', rating: '4.6' },
+          { name: 'Captan 50 WP', type: 'Captan Fungicide', dose: '2.5g per liter', freq: 'Every 7–10 days', price: '₹260', rating: '4.4' },
+        ],
+        prevention: ['Mulch to prevent soil splash onto leaves', 'Water in the morning only', 'Space roses for good airflow', 'Select disease-resistant rose varieties'],
+        tips: ['Black spot survives winter on infected canes and leaves', 'Clean up all fallen leaves each season', 'Avoid susceptible hybrid tea roses if recurrent', 'Start spraying preventively in spring'],
+      },
+      {
+        id: 'rust-disease',
+        name: 'Rust Disease',
+        icon: '🦠',
+        severity: 'moderate',
+        description: 'A widespread fungal disease named for the orange, rust-colored pustules it produces on leaf undersides. Spores are airborne and highly contagious.',
+        cause: 'Puccinia and other rust fungi species',
+        plants: 'Beans, wheat, sunflowers, roses, snapdragons',
+        season: 'Cool, moist periods — spring and fall',
+        spreadRate: 'Fast — airborne spores travel miles',
+        symptoms: ['Orange, red, yellow, or brown pustules on lower leaf surface', 'Yellow patches on upper leaf surface', 'Distorted and misshapen leaves', 'Premature leaf fall', 'Reduced plant vigor'],
+        naturalRemedies: [
+          'Garlic oil spray: Blend 5 garlic cloves in 1 liter water. Steep 24 hours, strain, spray weekly.',
+          'Neem oil spray (3ml/liter) — effective if applied at first sign of infection.',
+          'Sulfur dust application on dry leaves — do not apply when temp exceeds 32°C.',
+          'Remove and burn infected foliage immediately. Avoid compost.',
+        ],
+        medicines: [
+          { name: 'Sulfex 80 WP', type: 'Wettable Sulfur', dose: '3g per liter', freq: 'Weekly', price: '₹180', rating: '4.5' },
+          { name: 'Ridomil Gold', type: 'Mancozeb + Metalaxyl', dose: '2.5g per liter', freq: 'Every 10 days', price: '₹480', rating: '4.7' },
+          { name: 'Flint 50 WG', type: 'Trifloxystrobin', dose: '0.5g per liter', freq: 'Every 14 days', price: '₹560', rating: '4.8' },
+        ],
+        prevention: ['Plant rust-resistant varieties', 'Maintain adequate plant nutrition (K and P)', 'Avoid excess nitrogen fertilization', 'Clean and disinfect tools between plants'],
+        tips: ['Rust needs living plant tissue to survive — remove debris after harvest', 'Unlike most fungi, rust thrives in cooler temps (15–22°C)', 'Look for pustules on leaf undersides first', 'Apply fungicides at first sign'],
+      },
+      {
+        id: 'root-rot',
+        name: 'Root Rot',
+        icon: '🌱',
+        severity: 'critical',
+        description: 'A devastating soil-borne disease caused by overwatering and opportunistic fungi. Destroys the root system and can kill plants rapidly if untreated.',
+        cause: 'Phytophthora, Pythium, or Fusarium in waterlogged soil',
+        plants: 'All potted plants, vegetables, trees',
+        season: 'Year-round; worst in waterlogged conditions',
+        spreadRate: 'Slow but lethal if untreated',
+        symptoms: ['Wilting despite adequate watering', 'Brown, black, or mushy roots (healthy roots are white)', 'Yellowing and drooping leaves', 'Stunted growth', 'Foul, sour smell from soil'],
+        naturalRemedies: [
+          'URGENT: Stop watering immediately. Remove plant from pot and inspect roots.',
+          'Trim all brown/black mushy roots with sterilized scissors. Leave only firm, white roots.',
+          'Soak remaining roots in diluted hydrogen peroxide (1 part 3% H2O2 : 3 parts water) for 30 min.',
+          'Repot in fresh, sterile, well-draining soil mix with added perlite (30%).',
+          'Trichoderma bio-fungicide as soil amendment prevents future infections.',
+        ],
+        medicines: [
+          { name: 'Ridomil MZ 72 WP', type: 'Metalaxyl + Mancozeb', dose: '2g per liter (soil drench)', freq: 'Every 3 weeks', price: '₹320', rating: '4.9' },
+          { name: 'Aliette 80 WG', type: 'Fosetyl-Aluminum', dose: '2.5g per liter drench', freq: 'Every 3 weeks', price: '₹450', rating: '4.7' },
+          { name: 'Captan 50 WP', type: 'Captan Soil Drench', dose: '3g per liter', freq: 'Once monthly', price: '₹200', rating: '4.4' },
+        ],
+        prevention: ['Always use pots with drainage holes', 'Let top 2 inches of soil dry between watering', 'Use well-draining potting mix', 'Never let plants sit in standing water'],
+        tips: ['Root rot is irreversible if caught too late', 'A foul smell from soil is the clearest warning sign', 'Repot immediately — do not wait', 'Reduce watering frequency by 50% in recovery phase'],
+      },
+      {
+        id: 'bacterial-leaf-spot',
+        name: 'Bacterial Leaf Spot',
+        icon: '🔴',
+        severity: 'high',
+        description: 'Bacterial infection causing dark, water-soaked spots that turn necrotic. Spreads rapidly via rain splash, insects, and contaminated tools.',
+        cause: 'Xanthomonas, Pseudomonas bacterial species',
+        plants: 'Peppers, tomatoes, stone fruits, brassicas',
+        season: 'Humid, warm season (25–32°C)',
+        spreadRate: 'Fast — water-borne transmission',
+        symptoms: ['Small dark, water-soaked spots', 'Yellow halo surrounds lesions', 'Spots merge into large dead patches', 'Holes in leaves as dead tissue falls out', 'Defoliation in severe cases'],
+        naturalRemedies: [
+          'Copper sulfate spray (2g per liter) every 5–7 days — copper ions kill bacteria on contact.',
+          'Diluted hydrogen peroxide (3% solution, 1:10 with water) spray on affected areas.',
+          'Remove all infected leaves and discard in sealed bags — do not compost.',
+          'Improve airflow by reducing plant density.',
+        ],
+        medicines: [
+          { name: 'Blitox 50 WP', type: 'Copper Oxychloride', dose: '3g per liter', freq: 'Every 7 days', price: '₹150', rating: '4.5' },
+          { name: 'Agrimycin 100', type: 'Streptomycin Sulfate', dose: '0.5g per liter', freq: 'Every 10 days', price: '₹380', rating: '4.3' },
+          { name: 'Kocide 3000', type: 'Copper Hydroxide', dose: '2ml per liter', freq: 'Every 7 days', price: '₹520', rating: '4.7' },
+        ],
+        prevention: ['Avoid overhead irrigation', 'Use copper sprays preventively in humid weather', 'Space plants for good airflow', 'Sterilize all cutting tools with 70% alcohol'],
+        tips: ['Bacteria enter through wounds and stomata', 'Spread is fastest during and after rain', 'Remove infected tissue before applying bactericide', 'Do not work in the garden when plants are wet'],
+      },
+    ];
+
+    /* ─── State ─── */
+    let selectedDiseaseId = null;
+
+    /* ─── Render Disease List ─── */
+    function renderDiseaseList(filter = '') {
+      const list = document.getElementById('disease-list');
+      const filtered = DISEASES.filter(d =>
+        d.name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      list.innerHTML = filtered.map(d => `
+    <div class="disease-list-item ${selectedDiseaseId === d.id ? 'active' : ''}"
+         onclick="selectDisease('${d.id}')" data-name="${d.name}">
+      <span class="disease-item-icon">${d.icon}</span>
+      <span class="disease-item-name">${d.name}</span>
+      <span class="disease-item-severity sev-${d.severity}">
+        ${{ none: 'OK', moderate: 'Mid', high: 'High', critical: 'Crit' }[d.severity]}
+      </span>
+    </div>
+  `).join('');
+    }
+
+    /* ─── Select & Render Disease Detail ─── */
+    function selectDisease(id) {
+      selectedDiseaseId = id;
+      const d = DISEASES.find(x => x.id === id);
+      if (!d) return;
+
+      renderDiseaseList();
+
+      document.getElementById('no-disease-msg').classList.add('hidden');
+      const detail = document.getElementById('disease-detail');
+      detail.classList.remove('hidden');
+
+      const sevBadge = {
+        none: '<span class="badge badge-green">✅ No Disease</span>',
+        moderate: '<span class="badge badge-yellow">⚠️ Moderate</span>',
+        high: '<span class="badge badge-red">🔴 High Risk</span>',
+        critical: `<span class="badge badge-red" style="background:rgba(239,68,68,.25);">🚨 Critical</span>`,
+      }[d.severity] || '';
+
+      // Medicines HTML
+      const medsHTML = d.medicines.length ? d.medicines.map(m => `
+    <div class="medicine-detail-card">
+      <div>
+        <div class="med-header">
+          <span class="med-icon">💊</span>
+          <div>
+            <div class="med-detail-name">${m.name}</div>
+            <span class="badge badge-blue">${m.type}</span>
+          </div>
+        </div>
+        <div class="med-specs">
+          <div class="med-spec">
+            <div class="med-spec-key">Dosage</div>
+            <div class="med-spec-val">${m.dose}</div>
+          </div>
+          <div class="med-spec">
+            <div class="med-spec-key">Frequency</div>
+            <div class="med-spec-val">${m.freq}</div>
+          </div>
+          <div class="med-spec">
+            <div class="med-spec-key">Price</div>
+            <div class="med-spec-val" style="color:var(--green-400);">${m.price}</div>
+          </div>
+          <div class="med-spec">
+            <div class="med-spec-key">Rating</div>
+            <div class="med-spec-val" style="color:var(--yellow-400);">⭐ ${m.rating}/5</div>
+          </div>
+        </div>
+      </div>
+      <div class="med-buy-col">
+        <a href="shop.html" class="btn btn-primary btn-sm">🛒 Buy</a>
+        <button class="btn btn-ghost btn-sm">📋 Info</button>
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--text-dim);font-size:.9rem;">No specific medicines required — focus on natural remedies and care.</p>';
+
+      detail.innerHTML = `
+    <!-- Disease Header -->
+    <div class="disease-header">
+      <div class="disease-big-icon">${d.icon}</div>
+      <div class="disease-header-content">
+        <h2>${d.name}</h2>
+        <p>${d.description}</p>
+        <div class="disease-header-badges">
+          ${sevBadge}
+          <span class="badge badge-blue">🌿 ${d.plants}</span>
+          <span class="badge badge-orange">📅 ${d.season}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="treatment-tabs">
+      <button class="treat-tab active" onclick="switchTab('overview', this)">📋 Overview</button>
+      <button class="treat-tab" onclick="switchTab('remedies', this)">🌿 Remedies</button>
+      <button class="treat-tab" onclick="switchTab('medicines', this)">💊 Medicines</button>
+      <button class="treat-tab" onclick="switchTab('tips', this)">💡 Tips</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-content active" id="tab-overview">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--green-400);margin-bottom:14px;">Disease Info</div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;">
+              <span style="color:var(--text-muted);">Cause</span>
+              <span style="font-weight:600;max-width:55%;text-align:right;">${d.cause}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;">
+              <span style="color:var(--text-muted);">Affected Plants</span>
+              <span style="font-weight:600;max-width:55%;text-align:right;">${d.plants}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;">
+              <span style="color:var(--text-muted);">Peak Season</span>
+              <span style="font-weight:600;text-align:right;">${d.season}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;">
+              <span style="color:var(--text-muted);">Spread Rate</span>
+              <span style="font-weight:600;text-align:right;">${d.spreadRate}</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+          <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red-400);margin-bottom:14px;">Symptoms</div>
+          <ul style="display:flex;flex-direction:column;gap:8px;">
+            ${d.symptoms.map(s => `
+              <li style="font-size:.85rem;color:var(--text-secondary);display:flex;align-items:flex-start;gap:8px;line-height:1.4;">
+                <span style="color:var(--red-400);font-size:.7rem;margin-top:5px;">●</span>
+                ${s}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      </div>
+      <div style="background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:var(--radius-lg);padding:20px;">
+        <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--green-400);margin-bottom:12px;">Prevention Tips</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          ${d.prevention.map(p => `<div style="font-size:.85rem;color:var(--text-secondary);padding:8px 12px;background:rgba(34,197,94,.05);border-radius:8px;border-left:2px solid rgba(34,197,94,.3);">✅ ${p}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Remedies Tab -->
+    <div class="tab-content" id="tab-remedies">
+      <div class="alert alert-info" style="margin-bottom:20px;">
+        <span>ℹ️</span>
+        <span>Natural remedies are best for mild to moderate cases. For severe infections, combine with medicinal treatments.</span>
+      </div>
+      ${d.naturalRemedies.map((r, i) => `
+        <div class="remedy-card">
+          <div class="remedy-num">${i + 1}</div>
+          <div class="remedy-text">${r}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Medicines Tab -->
+    <div class="tab-content" id="tab-medicines">
+      <div class="alert alert-warning" style="margin-bottom:20px;">
+        <span>⚠️</span>
+        <span>Always read the product label before use. Wear protective gloves. Keep children away during application.</span>
+      </div>
+      ${medsHTML}
+    </div>
+
+    <!-- Tips Tab -->
+    <div class="tab-content" id="tab-tips">
+      <div class="tips-list">
+        ${d.tips.map((t, i) => `
+          <div class="tip-row">
+            <div class="tip-num">${i + 1}</div>
+            <div>${t}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="alert alert-healthy" style="margin-top:20px;">
+        <span>💚</span>
+        <span>Need a personalized diagnosis? <a href="detect.html" style="color:var(--green-400);font-weight:700;text-decoration:underline;">Use our AI Detector →</a></span>
+      </div>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
+      <a href="shop.html" class="btn btn-primary">🛒 Buy Medicines</a>
+      <a href="detect.html" class="btn btn-secondary">🔬 Re-Scan Plant</a>
+      <a href="community.html" class="btn btn-ghost">❓ Ask Community</a>
+    </div>
+  `;
+
+      // Scroll to detail on mobile
+      if (window.innerWidth <= 900) {
+        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    /* ─── Switch Tabs ─── */
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.treat-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    /* ─── Init ─── */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDiseaseList();
+
+      // Search
+      document.getElementById('disease-search')?.addEventListener('input', (e) => {
+        renderDiseaseList(e.target.value);
+      });
+
+      // Handle URL query param ?d=disease-id
+      const urlParams = new URLSearchParams(window.location.search);
+      const diseaseId = urlParams.get('d');
+      if (diseaseId) {
+        selectDisease(diseaseId);
+      }
+    });
+  </script>
+</body>
+
+</html>

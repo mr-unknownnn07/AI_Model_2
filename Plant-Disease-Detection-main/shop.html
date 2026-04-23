@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Pharmacy & Garden Shop — PlantCure AI</title>
+  <meta name="description" content="Buy plant medicines, fungicides, fertilizers, seeds, and farming tools. Recommended products matched to your plant's disease." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .shop-layout {
+      padding-top: var(--nav-height);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* ─── Shop Banner ─── */
+    .shop-banner {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+      border-bottom: 1px solid var(--border);
+      padding: 32px 5%;
+    }
+    .shop-banner-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .shop-banner h1 { font-size: clamp(1.4rem,3vw,2rem); margin-bottom: 6px; }
+    .shop-banner p  { font-size: .88rem; color: var(--text-muted); }
+
+    /* ─── Category Tabs ─── */
+    .category-tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      padding: 20px 5%; background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      grid-column: 1 / -1;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .cat-btn {
+      padding: 9px 20px;
+      border-radius: var(--radius-full);
+      font-size: .85rem; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      transition: var(--transition-fast);
+      white-space: nowrap;
+    }
+    .cat-btn.active,
+    .cat-btn:hover {
+      background: linear-gradient(135deg, var(--green-700), var(--green-600));
+      color: #fff; border-color: transparent;
+      box-shadow: var(--shadow-glow-sm);
+    }
+
+    /* ─── Products Grid ─── */
+    .products-area {
+      padding: 28px 5%;
+      overflow-y: auto;
+    }
+    .products-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .products-count { font-size: .85rem; color: var(--text-muted); }
+
+    .search-sort {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    /* Product Card overrides */
+    .product-card .add-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-600), var(--green-500));
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      border: none; cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-glow-sm);
+      flex-shrink: 0;
+    }
+    .product-card .add-btn:hover { transform: scale(1.1) rotate(90deg); }
+    .rating { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+    .rating .stars { font-size: .75rem; }
+    .rating span  { font-size: .75rem; color: var(--text-dim); }
+
+    /* ─── Cart Sidebar ─── */
+    .cart-sidebar {
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cart-header h3 { font-size: 1rem; }
+    .cart-badge {
+      background: var(--green-500);
+      color: #fff;
+      font-size: .72rem; font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      min-width: 22px;
+      text-align: center;
+    }
+    .cart-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .cart-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+    }
+    .cart-empty .icon { font-size: 3rem; margin-bottom: 12px; opacity: .5; }
+
+    .cart-item {
+      display: flex; gap: 12px; align-items: center;
+      padding: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      animation: fadeInUp .3s ease;
+    }
+    .cart-item-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-size: .85rem; font-weight: 700; }
+    .cart-item-price { font-size: .82rem; color: var(--green-400); font-weight: 700; }
+    .cart-item-qty {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 6px;
+    }
+    .qty-btn {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: .9rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: var(--transition-fast);
+    }
+    .qty-btn:hover { background: rgba(34,197,94,.15); border-color: var(--border-hover); }
+    .qty-val { font-size: .85rem; font-weight: 700; min-width: 20px; text-align: center; }
+    .cart-item-remove {
+      color: var(--red-400); cursor: pointer; font-size: 1rem;
+      padding: 4px; transition: var(--transition-fast);
+      background: none; border: none;
+    }
+    .cart-item-remove:hover { color: var(--red-500); transform: scale(1.2); }
+
+    .cart-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-tertiary);
+    }
+    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .cart-total-label { font-size: .85rem; color: var(--text-muted); }
+    .cart-total-val { font-size: 1.2rem; font-weight: 900; color: var(--green-400); }
+    .cart-savings { font-size: .78rem; color: var(--orange-400); margin-bottom: 14px; }
+    .checkout-btn { width: 100%; justify-content: center; }
+
+    /* Promo banner */
+    .promo-banner {
+      margin: 0 5% 20px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, rgba(250,204,21,.1), rgba(251,146,60,.05));
+      border: 1px solid rgba(250,204,21,.2);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; gap: 12px;
+      font-size: .85rem;
+    }
+    .promo-icon { font-size: 1.5rem; }
+    .promo-text { flex: 1; }
+
+    /* Trust badges */
+    .trust-badges {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .trust-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .72rem; color: var(--text-dim);
+    }
+
+    /* ─── Checkout Modal ─── */
+    .ck-form { display: flex; flex-direction: column; gap: 16px; }
+    .ck-order-summary {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 8px;
+    }
+    .ck-order-item { display: flex; justify-content: space-between; font-size: .85rem; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .ck-order-item:last-child { border-bottom: none; }
+
+    /* No products */
+    .no-products { text-align: center; padding: 60px 20px; color: var(--text-muted); grid-column: 1/-1; }
+
+    @media (max-width: 1024px) {
+      .shop-layout { grid-template-columns: 1fr; }
+      .cart-sidebar { border-left: none; border-top: 1px solid var(--border); }
+    }
+    @media (max-width: 600px) {
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 400px) {
+      .products-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader">
+  <div class="loader-logo">🛒</div>
+  <div class="spinner"></div>
+  <div class="loader-text">LOADING SHOP</div>
+</div>
+
+<!-- ═══ Navbar ═══ -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🌿</div>
+    Plant<span class="accent">Cure</span> AI
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" data-i18n="nav_home">Home</a></li>
+    <li><a href="detect.html" data-i18n="nav_detect">AI Detector</a></li>
+    <li><a href="treatment.html" data-i18n="nav_treatment">Treatment</a></li>
+    <li><a href="shop.html" class="active" data-i18n="nav_shop">Shop</a></li>
+    <li><a href="community.html" data-i18n="nav_community">Community</a></li>
+    <li><a href="detect.html" class="nav-cta">🔬 Detect Disease</a></li>
+  </ul>
+  <div class="nav-controls">
+    <button class="nav-icon-btn" id="theme-btn">🌙</button>
+    <button class="lang-btn" id="lang-btn">🌐 <span>हिंदी</span></button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="shop-layout">
+
+  <!-- ─── Shop Banner ─── -->
+  <div class="shop-banner">
+    <div class="shop-banner-inner">
+      <div>
+        <h1>🛒 Plant Pharmacy &amp; Garden Shop</h1>
+        <p>Medicines, fertilizers, seeds &amp; farming tools — curated by our AI for plant health</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="badge badge-green">🚚 Free delivery over ₹500</span>
+        <span class="badge badge-yellow">🌿 100% Organic options</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Categories ─── -->
+  <div class="category-tabs">
+    <button class="cat-btn active" onclick="filterProducts('all', this)">🌿 All Products</button>
+    <button class="cat-btn" onclick="filterProducts('fungicide', this)">🧪 Fungicides</button>
+    <button class="cat-btn" onclick="filterProducts('fertilizer', this)">🌱 Fertilizers</button>
+    <button class="cat-btn" onclick="filterProducts('seed', this)">🌾 Seeds</button>
+    <button class="cat-btn" onclick="filterProducts('organic', this)">🍃 Organic</button>
+    <button class="cat-btn" onclick="filterProducts('tool', this)">🛠️ Tools</button>
+    <button class="cat-btn" onclick="filterProducts('pesticide', this)">🐛 Pesticides</button>
+    <button class="cat-btn" onclick="filterProducts('soil', this)">🪱 Soil &amp; Compost</button>
+  </div>
+
+  <!-- ─── Products ─── -->
+  <div class="products-area">
+
+    <!-- Promo -->
+    <div class="promo-banner">
+      <span class="promo-icon">🎉</span>
+      <div class="promo-text">
+        <strong>Today's Offer:</strong> Use code <strong style="color:var(--green-400);">PLANTCURE20</strong> for 20% off on all fungicides!
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="copyPromo()">Copy Code</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="products-toolbar">
+      <div class="products-count" id="product-count">Showing all products</div>
+      <div class="search-sort">
+        <input type="text" id="product-search" class="form-input" style="width:200px;height:38px;border-radius:var(--radius-full);" placeholder="🔍 Search..." />
+        <select class="form-select" id="sort-select" style="width:160px;height:38px;" onchange="sortProducts(this.value)">
+          <option value="">Sort: Featured</option>
+          <option value="low">Price: Low to High</option>
+          <option value="high">Price: High to Low</option>
+          <option value="rating">Top Rated</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid" id="products-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ─── Cart Sidebar ─── -->
+  <div class="cart-sidebar">
+    <div class="cart-header">
+      <h3>🛒 Your Cart</h3>
+      <span class="cart-badge" id="cart-count">0</span>
+    </div>
+
+    <div class="cart-body" id="cart-body">
+      <div class="cart-empty" id="cart-empty">
+        <div class="icon">🛒</div>
+        <p>Your cart is empty</p>
+        <p style="font-size:.8rem;margin-top:8px;">Add products to get started</p>
+      </div>
+      <div id="cart-items"></div>
+    </div>
+
+    <div class="trust-badges">
+      <div class="trust-badge">🔒 Secure Payment</div>
+      <div class="trust-badge">🚚 Fast Delivery</div>
+      <div class="trust-badge">↩️ Easy Returns</div>
+    </div>
+
+    <div class="cart-footer" id="cart-footer" style="display:none;">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Subtotal</span>
+        <span id="cart-subtotal">₹0</span>
+      </div>
+      <div class="cart-total-row">
+        <span class="cart-total-label">Delivery</span>
+        <span id="cart-delivery">₹40</span>
+      </div>
+      <div class="cart-total-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">
+        <span class="cart-total-label" style="font-size:1rem;font-weight:700;">Total</span>
+        <span class="cart-total-val" id="cart-total">₹0</span>
+      </div>
+      <div class="cart-savings" id="cart-savings"></div>
+      <button class="btn btn-primary checkout-btn" onclick="openCheckout()">💳 Checkout →</button>
+      <button class="btn btn-ghost w-full" style="margin-top:8px;justify-content:center;" onclick="clearCart()">🗑️ Clear Cart</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Checkout Modal ─── -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>💳 Checkout</h3>
+      <button class="modal-close" onclick="closeModal('checkout-modal')">✕</button>
+    </div>
+    <div class="ck-order-summary" id="checkout-summary"></div>
+    <div class="ck-form">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="Ramesh Sharma" id="ck-name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" placeholder="9876543210" id="ck-phone" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Address</label>
+        <textarea class="form-textarea" rows="3" placeholder="Street address, city, state, PIN" id="ck-address"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:.85rem;">
+            <input type="radio" name="payment" value="cod" checked /> Cash on Delivery
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:.85rem;">
+            <input type="radio" name="payment" value="upi" /> UPI / Online
+          </label>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg w-full justify-content" style="justify-content:center;" onclick="placeOrder()">
+        ✅ Place Order
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Order Success Modal ─── -->
+<div class="modal-overlay" id="success-modal">
+  <div class="modal" style="text-align:center;max-width:420px;">
+    <div style="font-size:4rem;margin-bottom:16px;animation:float 2s ease-in-out infinite;">🎉</div>
+    <h2 style="margin-bottom:12px;">Order Placed!</h2>
+    <p style="color:var(--text-muted);margin-bottom:20px;">Your order has been placed successfully. You'll receive a confirmation SMS shortly.</p>
+    <div style="background:var(--bg-input);border-radius:var(--radius);padding:14px;margin-bottom:20px;text-align:left;font-size:.85rem;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>Order ID</span>
+        <span style="font-weight:700;color:var(--green-400);" id="order-id">#PC-00001</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span>Estimated Delivery</span>
+        <span style="font-weight:700;">3–5 Business Days</span>
+      </div>
+    </div>
+    <button class="btn btn-primary w-full justify-content" style="justify-content:center;" onclick="closeModal('success-modal');clearCart();">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo"><div class="nav-logo-icon">🌿</div>Plant<span class="accent">Cure</span> AI</a>
+      <p>India's trusted online plant pharmacy. 100% authentic products with fast delivery.</p>
+    </div>
+    <div class="footer-links"><h4>Shop</h4><ul>
+      <li><a href="#">Fungicides</a></li>
+      <li><a href="#">Fertilizers</a></li>
+      <li><a href="#">Seeds</a></li>
+      <li><a href="#">Organic</a></li>
+    </ul></div>
+    <div class="footer-links"><h4>Quick</h4><ul>
+      <li><a href="detect.html">AI Detector</a></li>
+      <li><a href="treatment.html">Treatment Guide</a></li>
+      <li><a href="community.html">Community</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom"><p data-i18n="footer_copy">© 2025 PlantCure AI. Made with ❤️ for farmers.</p></div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+/* ═══════════════════════════════════
+   Shop — Products & Cart JS
+═══════════════════════════════════ */
+
+/* ─── Product Data ─── */
+const PRODUCTS = [
+  { id:1, name:'Dithane M-45 (Mancozeb)',       emoji:'🧪', cat:'fungicide',  price:180, original:220, rating:4.7, reviews:892, desc:'Broad-spectrum fungicide. Controls blight, rust, anthracnose.',    badge:'Best Seller', organic:false },
+  { id:2, name:'Neem Oil Spray (Cold Pressed)',  emoji:'🌿', cat:'organic',    price:240, original:320, rating:4.9, reviews:1432,desc:'100% pure neem oil. Controls pests, fungi & improves plant immunity.', badge:'Top Rated', organic:true },
+  { id:3, name:'Ridomil Gold MZ 72 WP',          emoji:'🧪', cat:'fungicide',  price:320, original:380, rating:4.8, reviews:634, desc:'Systemic fungicide for root rot, downy mildew & damping off.',     badge:'AI Pick', organic:false },
+  { id:4, name:'Blitox 50 WP (Copper)',          emoji:'🧪', cat:'fungicide',  price:150, original:175, rating:4.5, reviews:421, desc:'Copper-based fungicide-bactericide. Controls leaf spot & blight.',  badge:null, organic:false },
+  { id:5, name:'NPK 19:19:19 Water Soluble',     emoji:'💊', cat:'fertilizer', price:280, original:320, rating:4.7, reviews:765, desc:'Balanced all-purpose fertilizer for vegetative & flowering stages.', badge:'Popular', organic:false },
+  { id:6, name:'Vermicompost 5kg',               emoji:'🪱', cat:'soil',       price:199, original:250, rating:4.9, reviews:2103,desc:'Premium worm castings. Enriches soil structure naturally.',           badge:'Organic', organic:true },
+  { id:7, name:'Hybrid Tomato Seeds (F1)',       emoji:'🍅', cat:'seed',       price:89,  original:120, rating:4.6, reviews:544, desc:'Disease-resistant F1 hybrid tomato. High yield, blight resistant.', badge:'New', organic:false },
+  { id:8, name:'Sulfex 80 WP (Wettable Sulfur)',emoji:'🧪', cat:'fungicide',  price:180, original:200, rating:4.5, reviews:302, desc:'Effective against powdery mildew and rust. Safe for edibles.',        badge:null, organic:false },
+  { id:9, name:'Garden Pruning Shears',          emoji:'✂️', cat:'tool',       price:350, original:499, rating:4.8, reviews:988, desc:'Stainless steel, non-stick coating. Ergonomic grip for easy pruning.', badge:'Sale', organic:false },
+  { id:10,name:'Seaweed Extract (Bio-stimulant)',emoji:'🌊', cat:'organic',    price:310, original:390, rating:4.9, reviews:756, desc:'Natural growth booster. Increases plant immunity and stress tolerance.', badge:'Top Rated', organic:true },
+  { id:11,name:'Trichoderma Bio-fungicide',      emoji:'🍄', cat:'organic',    price:260, original:320, rating:4.7, reviews:423, desc:'Beneficial fungi that suppress soil-borne pathogens naturally.',        badge:'AI Pick', organic:true },
+  { id:12,name:'Hybrid Pepper Seeds (100 pcs)', emoji:'🌶️', cat:'seed',       price:75,  original:100, rating:4.5, reviews:312, desc:'High-yielding pepper variety with natural disease resistance.',          badge:null, organic:false },
+  { id:13,name:'Soil pH Testing Kit',            emoji:'🔬', cat:'tool',       price:199, original:280, rating:4.6, reviews:621, desc:'Quick & accurate soil pH testing. Includes 40+ tests.',                  badge:'Useful', organic:false },
+  { id:14,name:'Neem Cake Fertilizer 2kg',       emoji:'🌾', cat:'fertilizer', price:120, original:150, rating:4.7, reviews:834, desc:'Natural pest repellent and soil amendment. Rich in NPK.',               badge:'Organic', organic:true },
+  { id:15,name:'Captan 50 WP Fungicide',         emoji:'🧪', cat:'fungicide',  price:200, original:240, rating:4.4, reviews:287, desc:'Contact fungicide for black spot, apple scab, blight.',                 badge:null, organic:false },
+  { id:16,name:'Garden Spray Pump (2L)',         emoji:'💦', cat:'tool',       price:280, original:380, rating:4.7, reviews:1122,desc:'Adjustable nozzle. Comfortable for long spraying sessions.',              badge:'Best Seller', organic:false },
+];
+
+/* ─── Cart State ─── */
+let cart = JSON.parse(localStorage.getItem('plantcure_cart') || '[]');
+let currentFilter = 'all';
+let currentSort   = '';
+let searchQuery   = '';
+
+/* ─── Render Products ─── */
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  let filtered = [...PRODUCTS];
+
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(p => p.cat === currentFilter);
+  }
+  if (searchQuery) {
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(searchQuery) ||
+      p.desc.toLowerCase().includes(searchQuery)
+    );
+  }
+  if (currentSort === 'low')    filtered.sort((a,b) => a.price - b.price);
+  if (currentSort === 'high')   filtered.sort((a,b) => b.price - a.price);
+  if (currentSort === 'rating') filtered.sort((a,b) => b.rating - a.rating);
+
+  document.getElementById('product-count').textContent =
+    `Showing ${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="no-products"><div style="font-size:3rem;margin-bottom:12px;">🔍</div><h3>No products found</h3><p>Try a different search or category.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => {
+    const inCart = cart.find(c => c.id === p.id);
+    const discount = Math.round(((p.original - p.price) / p.original) * 100);
+    return `
+      <div class="product-card" id="prod-${p.id}">
+        <div class="product-img">
+          <span style="filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));">${p.emoji}</span>
+          ${p.badge ? `<span class="product-badge badge ${getBadgeClass(p.badge)}">${p.badge}</span>` : ''}
+          ${p.organic ? '<span style="position:absolute;top:12px;right:12px;font-size:.6rem;background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.3);color:var(--green-400);padding:2px 7px;border-radius:99px;font-weight:700;">🌿 ORGANIC</span>' : ''}
+        </div>
+        <div class="product-body">
+          <div class="rating">
+            <span class="stars">${'★'.repeat(Math.floor(p.rating))}${p.rating % 1 >= .5 ? '½' : ''}</span>
+            <span>${p.rating} (${p.reviews.toLocaleString()})</span>
+          </div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.desc}</div>
+          <div class="product-footer">
+            <div>
+              <div class="product-price">₹${p.price}</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="product-price original">₹${p.original}</span>
+                ${discount > 0 ? `<span style="font-size:.68rem;color:var(--orange-400);font-weight:700;">${discount}% off</span>` : ''}
+              </div>
+            </div>
+            <button class="add-btn" onclick="addToCart(${p.id})" title="Add to cart" id="add-btn-${p.id}">
+              ${inCart ? '✓' : '+'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getBadgeClass(badge) {
+  const map = { 'Best Seller': 'badge-orange', 'Top Rated': 'badge-yellow', 'AI Pick': 'badge-blue', 'Popular': 'badge-green', 'Organic': 'badge-green', 'New': 'badge-blue', 'Sale': 'badge-red', 'Useful': 'badge-blue' };
+  return map[badge] || 'badge-green';
+}
+
+/* ─── Cart Management ─── */
+function addToCart(productId) {
+  const product = PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  const existing = cart.find(c => c.id === productId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ ...product, qty: 1 });
+  }
+
+  saveCart();
+  renderCart();
+  renderProducts(); // update button state
+
+  const btn = document.getElementById(`add-btn-${productId}`);
+  if (btn) {
+    btn.textContent = '✓';
+    btn.style.transform = 'scale(1.2)';
+    setTimeout(() => { btn.style.transform = ''; }, 300);
+  }
+  window.PlantCure?.showToast(`${product.emoji} ${product.name.split('(')[0]} added to cart!`, 'success', 2000);
+}
+
+function removeFromCart(productId) {
+  cart = cart.filter(c => c.id !== productId);
+  saveCart();
+  renderCart();
+  renderProducts();
+}
+
+function updateQty(productId, delta) {
+  const item = cart.find(c => c.id === productId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) removeFromCart(productId);
+  else { saveCart(); renderCart(); }
+}
+
+function clearCart() {
+  cart = [];
+  saveCart();
+  renderCart();
+  renderProducts();
+  closeModal('checkout-modal');
+  closeModal('success-modal');
+}
+
+function saveCart() {
+  localStorage.setItem('plantcure_cart', JSON.stringify(cart));
+}
+
+/* ─── Render Cart ─── */
+function renderCart() {
+  const countEl    = document.getElementById('cart-count');
+  const emptyEl    = document.getElementById('cart-empty');
+  const itemsEl    = document.getElementById('cart-items');
+  const footerEl   = document.getElementById('cart-footer');
+  const subtotalEl = document.getElementById('cart-subtotal');
+  const deliveryEl = document.getElementById('cart-delivery');
+  const totalEl    = document.getElementById('cart-total');
+  const savingsEl  = document.getElementById('cart-savings');
+
+  const totalQty      = cart.reduce((s, c) => s + c.qty, 0);
+  const subtotal      = cart.reduce((s, c) => s + (c.price * c.qty), 0);
+  const totalOriginal = cart.reduce((s, c) => s + (c.original * c.qty), 0);
+  const savings       = totalOriginal - subtotal;
+  const delivery      = subtotal >= 500 ? 0 : 40;
+  const total         = subtotal + delivery;
+
+  countEl.textContent = totalQty;
+
+  if (cart.length === 0) {
+    emptyEl.classList.remove('hidden');
+    itemsEl.innerHTML = '';
+    footerEl.style.display = 'none';
+    return;
+  }
+
+  emptyEl.classList.add('hidden');
+  footerEl.style.display = '';
+
+  itemsEl.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <span class="cart-item-icon">${item.emoji}</span>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name.length > 25 ? item.name.substring(0,25)+'…' : item.name}</div>
+        <div class="cart-item-price">₹${item.price} × ${item.qty} = ₹${item.price * item.qty}</div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="updateQty(${item.id}, +1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+    </div>
+  `).join('');
+
+  subtotalEl.textContent = `₹${subtotal}`;
+  deliveryEl.textContent = delivery === 0 ? 'FREE 🎉' : `₹${delivery}`;
+  totalEl.textContent    = `₹${total}`;
+  savingsEl.textContent  = savings > 0 ? `🎉 You save ₹${savings} on this order!` : '';
+}
+
+/* ─── Filter & Sort ─── */
+function filterProducts(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts();
+}
+
+function sortProducts(val) {
+  currentSort = val;
+  renderProducts();
+}
+
+/* ─── Promo Code ─── */
+function copyPromo() {
+  navigator.clipboard?.writeText('PLANTCURE20').then(() => {
+    window.PlantCure?.showToast('Promo code PLANTCURE20 copied!', 'success');
+  }).catch(() => {
+    window.PlantCure?.showToast('Code: PLANTCURE20', 'info');
+  });
+}
+
+/* ─── Checkout ─── */
+function openCheckout() {
+  if (cart.length === 0) return;
+  const summaryEl = document.getElementById('checkout-summary');
+  const total = cart.reduce((s, c) => s + (c.price * c.qty), 0);
+  const delivery = total >= 500 ? 0 : 40;
+  summaryEl.innerHTML = `
+    <div style="font-size:.82rem;font-weight:700;margin-bottom:10px;color:var(--text-muted);">ORDER SUMMARY</div>
+    ${cart.map(c => `
+      <div class="ck-order-item">
+        <span>${c.emoji} ${c.name.substring(0,28)} × ${c.qty}</span>
+        <span style="font-weight:700;">₹${c.price * c.qty}</span>
+      </div>
+    `).join('')}
+    <div class="ck-order-item" style="font-weight:700;font-size:1rem;">
+      <span>Total (incl. ₹${delivery} delivery)</span>
+      <span style="color:var(--green-400);">₹${total + delivery}</span>
+    </div>
+  `;
+  openModal('checkout-modal');
+}
+
+function placeOrder() {
+  const name = document.getElementById('ck-name')?.value.trim();
+  const phone = document.getElementById('ck-phone')?.value.trim();
+  const address = document.getElementById('ck-address')?.value.trim();
+  if (!name || !phone || !address) {
+    window.PlantCure?.showToast('Please fill in all fields.', 'error');
+    return;
+  }
+  closeModal('checkout-modal');
+  document.getElementById('order-id').textContent = '#PC-' + Date.now().toString().slice(-5);
+  openModal('success-modal');
+}
+
+/* ─── Modal Helpers ─── */
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+/* ─── Init ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderProducts();
+  renderCart();
+
+  // Search
+  document.getElementById('product-search')?.addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderProducts();
+  });
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+});
+</script>
+</body>
+</html>

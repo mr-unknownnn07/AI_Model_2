@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Community — PlantCure AI</title>
+  <meta name="description" content="Connect with 500+ farmers and gardeners. Share plant tips, ask questions, get expert advice on plant diseases and treatments." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>" />
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .community-page {
+      padding-top: var(--nav-height);
+      min-height: 100vh;
+    }
+
+    /* ─── Banner ─── */
+    .community-banner {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 5%;
+      position: relative;
+      overflow: hidden;
+    }
+    .community-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(34,197,94,.06), transparent 60%);
+    }
+    .community-banner-inner {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      max-width: var(--content-max); margin: 0 auto;
+    }
+    .community-banner h1 { font-size: clamp(1.5rem,3vw,2.2rem); margin-bottom: 8px; }
+    .community-banner p { font-size: .9rem; color: var(--text-muted); }
+    .community-stats {
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .comm-stat { text-align: center; }
+    .comm-stat-num { font-size: 1.6rem; font-weight: 900; color: var(--green-400); }
+    .comm-stat-label { font-size: .72rem; color: var(--text-dim); }
+
+    /* ─── Layout ─── */
+    .community-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 0;
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 32px 5%;
+      gap: 32px;
+    }
+
+    /* ─── Post Composer ─── */
+    .composer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .composer-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .my-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-700), var(--green-500));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .composer-input {
+      flex: 1; padding: 10px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: .9rem;
+      font-family: var(--font-body);
+      outline: none; transition: var(--transition);
+      cursor: pointer;
+    }
+    .composer-textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-primary);
+      font-size: .9rem;
+      font-family: var(--font-body);
+      padding: 14px 16px;
+      outline: none; transition: var(--transition);
+      resize: none; min-height: 100px;
+      display: none;
+    }
+    .composer-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(34,197,94,.1);
+    }
+    .composer-tools {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      margin-top: 12px;
+    }
+    .composer-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      font-size: .75rem; font-weight: 600;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .tag-btn:hover,
+    .tag-btn.selected {
+      background: rgba(34,197,94,.12);
+      border-color: rgba(34,197,94,.3);
+      color: var(--green-400);
+    }
+
+    /* ─── Filter Tabs ─── */
+    .feed-filters {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 7px 18px;
+      border-radius: var(--radius-full);
+      font-size: .83rem; font-weight: 600;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--green-700), var(--green-600));
+      color: #fff; border-color: transparent;
+      box-shadow: var(--shadow-glow-sm);
+    }
+    .filter-btn:hover:not(.active) {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    /* Post card */
+    .post-card { margin-bottom: 16px; }
+    .post-card .post-image {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      margin: 12px 0;
+      height: 200px;
+      object-fit: cover;
+      background: linear-gradient(135deg, rgba(34,197,94,.1), rgba(34,197,94,.03));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem;
+    }
+    .post-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: .72rem; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .post-tag-disease { background: rgba(239,68,68,.12); color: var(--red-400); }
+    .post-tag-tip     { background: rgba(34,197,94,.12);  color: var(--green-400); }
+    .post-tag-question{ background: rgba(96,165,250,.12); color: var(--blue-400); }
+    .post-tag-harvest { background: rgba(250,204,21,.12); color: var(--yellow-400); }
+    .post-tag-general { background: rgba(192,132,252,.12);color: var(--purple-400); }
+
+    /* Comments */
+    .comments-section {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      margin-top: 14px;
+      display: none;
+    }
+    .comment {
+      display: flex; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(34,197,94,.06);
+    }
+    .comment:last-child { border-bottom: none; }
+    .comment-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-800), var(--green-600));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+    }
+    .comment-text { font-size: .83rem; color: var(--text-secondary); line-height: 1.55; }
+    .comment-author { font-weight: 700; font-size: .8rem; color: var(--text-primary); margin-bottom: 2px; }
+    .comment-time { font-size: .7rem; color: var(--text-dim); }
+
+    .comment-input-row {
+      display: flex; gap: 8px; align-items: center; margin-top: 10px;
+    }
+    .comment-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: .82rem;
+      font-family: var(--font-body);
+      padding: 8px 14px;
+      outline: none;
+    }
+    .comment-input:focus { border-color: var(--border-focus); }
+
+    /* ─── Sidebar ─── */
+    .community-sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+    .sidebar-card h4 { margin-bottom: 14px; font-size: .95rem; }
+
+    /* Trending topics */
+    .trending-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .trending-item:last-child { border-bottom: none; }
+    .trending-item:hover { color: var(--green-400); }
+    .trend-num { font-size: .7rem; font-weight: 900; color: var(--text-dim); width: 18px; }
+    .trend-text { font-size: .85rem; font-weight: 600; flex: 1; }
+    .trend-count { font-size: .72rem; color: var(--green-400); }
+
+    /* Members */
+    .member-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .member-row:last-child { border-bottom: none; }
+    .member-avatar { width: 36px; height: 36px; border-radius: 50%; display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;background:linear-gradient(135deg,var(--green-800),var(--green-600)); }
+    .member-name { font-size: .85rem; font-weight: 700; }
+    .member-role { font-size: .72rem; color: var(--text-dim); }
+    .member-follow { margin-left: auto; }
+
+    /* Tips of the day */
+    .daily-tip {
+      background: rgba(34,197,94,.07);
+      border: 1px solid rgba(34,197,94,.15);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: .85rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ─── Load more ─── */
+    .load-more-btn { width: 100%; justify-content: center; margin-top: 8px; }
+
+    /* Empty posts */
+    .no-posts { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: .9rem; }
+
+    @media (max-width: 900px) {
+      .community-layout { grid-template-columns: 1fr; padding: 20px 4%; }
+      .community-sidebar { order: -1; }
+    }
+    @media (max-width: 600px) {
+      .community-stats { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader">
+  <div class="loader-logo">👥</div>
+  <div class="spinner"></div>
+  <div class="loader-text">LOADING COMMUNITY</div>
+</div>
+
+<!-- ═══ Navbar ═══ -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🌿</div>
+    Plant<span class="accent">Cure</span> AI
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="index.html" data-i18n="nav_home">Home</a></li>
+    <li><a href="detect.html" data-i18n="nav_detect">AI Detector</a></li>
+    <li><a href="treatment.html" data-i18n="nav_treatment">Treatment</a></li>
+    <li><a href="shop.html" data-i18n="nav_shop">Shop</a></li>
+    <li><a href="community.html" class="active" data-i18n="nav_community">Community</a></li>
+    <li><a href="detect.html" class="nav-cta">🔬 Detect Disease</a></li>
+  </ul>
+  <div class="nav-controls">
+    <button class="nav-icon-btn" id="theme-btn">🌙</button>
+    <button class="lang-btn" id="lang-btn">🌐 <span>हिंदी</span></button>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- ─── Banner ─── -->
+<div class="community-banner">
+  <div class="community-banner-inner">
+    <div>
+      <h1>👥 Farmer Community</h1>
+      <p>Connect, share, and learn from growers across India. Ask questions, share tips, get expert advice.</p>
+    </div>
+    <div class="community-stats">
+      <div class="comm-stat">
+        <div class="comm-stat-num">500+</div>
+        <div class="comm-stat-label">Members</div>
+      </div>
+      <div class="comm-stat">
+        <div class="comm-stat-num">1.2K</div>
+        <div class="comm-stat-label">Posts</div>
+      </div>
+      <div class="comm-stat">
+        <div class="comm-stat-num">4.8K</div>
+        <div class="comm-stat-label">Answers</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="community-page">
+  <div class="community-layout">
+
+    <!-- ─── Main Feed ─── -->
+    <main>
+
+      <!-- Post Composer -->
+      <div class="composer-card">
+        <div class="composer-header">
+          <div class="my-avatar">🌱</div>
+          <input class="composer-input" type="text" id="composer-trigger" placeholder="Share a plant tip, question, or experience..." readonly onclick="expandComposer()" />
+        </div>
+        <div id="composer-expanded" style="display:none;">
+          <textarea class="composer-textarea" id="post-content" placeholder="Write your post here... Describe your plant, disease, or tip in detail." rows="4"></textarea>
+          <div class="composer-tools">
+            <div class="composer-tags">
+              <span class="tag-btn" onclick="selectTag(this, 'tip')">🌿 Tip</span>
+              <span class="tag-btn" onclick="selectTag(this, 'question')">❓ Question</span>
+              <span class="tag-btn" onclick="selectTag(this, 'disease')">⚠️ Disease</span>
+              <span class="tag-btn" onclick="selectTag(this, 'harvest')">🌾 Harvest</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="collapseComposer()">Cancel</button>
+              <button class="btn btn-primary btn-sm" onclick="submitPost()">📢 Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed Filters -->
+      <div class="feed-filters">
+        <button class="filter-btn active" onclick="filterPosts('all', this)">🔥 All Posts</button>
+        <button class="filter-btn" onclick="filterPosts('tip', this)">🌿 Tips</button>
+        <button class="filter-btn" onclick="filterPosts('question', this)">❓ Questions</button>
+        <button class="filter-btn" onclick="filterPosts('disease', this)">⚠️ Diseases</button>
+        <button class="filter-btn" onclick="filterPosts('harvest', this)">🌾 Harvests</button>
+      </div>
+
+      <!-- Post Feed -->
+      <div id="post-feed">
+        <!-- Populated by JS -->
+      </div>
+
+      <button class="btn btn-ghost load-more-btn" onclick="loadMorePosts()">
+        ↓ Load More Posts
+      </button>
+    </main>
+
+    <!-- ─── Sidebar ─── -->
+    <aside class="community-sidebar">
+
+      <!-- Daily Tip -->
+      <div class="sidebar-card">
+        <h4>💡 Tip of the Day</h4>
+        <div class="daily-tip" id="daily-tip">Loading today's tip...</div>
+      </div>
+
+      <!-- Trending Topics -->
+      <div class="sidebar-card">
+        <h4>🔥 Trending Topics</h4>
+        <div id="trending-topics">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Top Members -->
+      <div class="sidebar-card">
+        <h4>🌟 Top Contributors</h4>
+        <div id="top-members">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="sidebar-card">
+        <h4>🔗 Helpful Links</h4>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="detect.html" class="btn btn-secondary btn-sm" style="justify-content:center;">🔬 AI Plant Detector</a>
+          <a href="treatment.html" class="btn btn-ghost btn-sm" style="justify-content:center;">📖 Treatment Guide</a>
+          <a href="shop.html" class="btn btn-ghost btn-sm" style="justify-content:center;">🛒 Buy Medicines</a>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo"><div class="nav-logo-icon">🌿</div>Plant<span class="accent">Cure</span> AI</a>
+      <p>India's #1 plant health community. Ask, share, and grow together.</p>
+    </div>
+    <div class="footer-links"><h4>Platform</h4><ul>
+      <li><a href="detect.html">AI Detector</a></li>
+      <li><a href="treatment.html">Treatment Guide</a></li>
+      <li><a href="shop.html">Shop</a></li>
+    </ul></div>
+  </div>
+  <div class="footer-bottom"><p data-i18n="footer_copy">© 2025 PlantCure AI. Made with ❤️ for farmers.</p></div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+/* ═══════════════════════════════════
+   Community — Full JS
+═══════════════════════════════════ */
+
+/* ─── Default Posts ─── */
+const DEFAULT_POSTS = [
+  {
+    id: 1,
+    author: 'Ramesh Sharma', avatar: '👨‍🌾', role: 'Tomato Farmer · Punjab',
+    tag: 'disease',
+    content: 'My tomato plants have these brown water-soaked spots spreading very fast after last week\'s rain. PlantCure AI detected it as Early Blight (94% confidence). Applied Mancozeb M-45 spray and removed infected leaves. After 4 days — huge improvement! Sharing photos to help others identify it early.',
+    hasImage: true, imageEmoji: '🍅',
+    time: '2 hours ago', likes: 47, comments: [
+      { author: 'Priya Nair', avatar: '👩‍🌾', text: 'Same happened to my tomatoes last season! Mancozeb worked for me too. Make sure to spray the underside of leaves as well.', time: '1h ago' },
+      { author: 'Dr. Arun Singh', avatar: '👨‍💼', text: 'Good catch! Early blight spreads rapidly in humid conditions. Remove defoliated leaves from the field entirely — don\'t leave them on the ground.', time: '45min ago' },
+    ]
+  },
+  {
+    id: 2,
+    author: 'Priya Nair', avatar: '👩‍🌾', role: 'Rose Gardener · Kerala',
+    tag: 'tip',
+    content: '🌹 PRO TIP for powdery mildew on roses: Mix 1 tbsp baking soda + 2 drops neem oil + 500ml water. Spray in the evening (not during hot sun). I\'ve been using this for 3 years now — it completely eliminated powdery mildew from my garden without any chemicals! 100% organic and costs less than ₹5 per spray.',
+    hasImage: false, time: '5 hours ago', likes: 128, comments: [
+      { author: 'Vikram Patel', avatar: '👨‍💼', text: 'This is gold! I\'ve been spending hundreds on fungicides. Will definitely try this!', time: '3h ago' },
+      { author: 'Sunita Devi', avatar: '👩‍💻', text: 'Does this work for black spot too? My roses have both issues.', time: '2h ago' },
+    ]
+  },
+  {
+    id: 3,
+    author: 'Vikram Patel', avatar: '👨‍💼', role: 'Home Gardener · Ahmedabad',
+    tag: 'question',
+    content: '❓ Help needed! My jasmine plant leaves are turning yellow and dropping even though I\'m watering regularly. The soil smells slightly sour. Is this root rot? Already uploaded to PlantCure AI — it said "Possible Root Rot (78% confidence)". Should I repot immediately or wait?',
+    hasImage: false, time: '8 hours ago', likes: 23, comments: [
+      { author: 'Dr. Arun Singh', avatar: '👨‍💼', text: '⚡ Root rot — REPOT IMMEDIATELY! That sour smell is a definite sign. Stop watering, remove from pot, trim all brown/black roots, and repot in fresh well-draining soil. Add perlite 30% to the mix.', time: '6h ago' },
+      { author: 'Priya Nair', avatar: '👩‍🌾', text: 'Absolutely repot now. I lost a beautiful jasmine to root rot by waiting. The 78% confidence from AI is quite high — trust it!', time: '5h ago' },
+    ]
+  },
+  {
+    id: 4,
+    author: 'Sunita Devi', avatar: '👩‍💻', role: 'Vegetable Farmer · Maharashtra',
+    tag: 'harvest',
+    content: '🌾 HARVEST SUCCESS! Used PlantCure AI all season to monitor my cucumber crop. Early detected downy mildew in May, treated with Ridomil Gold — and today I harvested 120kg from just 20 plants! Best yield in 5 years. This AI detection tool is revolutionary for small farmers like us. 🙏',
+    hasImage: true, imageEmoji: '🥒',
+    time: '1 day ago', likes: 212, comments: [
+      { author: 'Ramesh Sharma', avatar: '👨‍🌾', text: 'Congratulations! 120kg from 20 plants is an excellent yield!', time: '20h ago' },
+      { author: 'Ankit Kumar', avatar: '🧑‍🌾', text: 'What spacing did you use? And how often did you apply the Ridomil?', time: '18h ago' },
+    ]
+  },
+  {
+    id: 5,
+    author: 'Dr. Arun Singh', avatar: '👨‍💼', role: 'Plant Pathologist · Pune',
+    tag: 'tip',
+    content: '🔬 EXPERT TIP — Monsoon plant care (must know!):\n1. Reduce watering to 50% during heavy rain\n2. Apply copper spray BEFORE rain, not after\n3. Improve drainage urgently — waterlogged soil = root rot\n4. Space plants for airflow — fungi love humidity\n5. Never apply fertilizer in waterlogged soil\nSave this post! The monsoon is the #1 cause of plant death in Indian gardens.',
+    hasImage: false, time: '2 days ago', likes: 389, comments: [
+      { author: 'Sunita Devi', avatar: '👩‍💻', text: 'Dr. Singh, point 3 saved my crops last year! Improved drainage trenches made a massive difference.', time: '1d ago' },
+    ]
+  },
+];
+
+/* ─── State ─── */
+let allPosts = JSON.parse(localStorage.getItem('plantcure_posts') || 'null') || DEFAULT_POSTS;
+let likedPosts = JSON.parse(localStorage.getItem('plantcure_likes') || '[]');
+let currentFilter = 'all';
+let selectedTag = 'tip';
+let displayCount = 5;
+
+/* ─── Trending Topics ─── */
+const TRENDING = [
+  { topic: '#PowderyMildew',  count: '245 posts' },
+  { topic: '#MonsoonCare',   count: '198 posts' },
+  { topic: '#TomatoBlight',  count: '167 posts' },
+  { topic: '#OrganicFarming',count: '143 posts' },
+  { topic: '#NaturalRemedies',count: '121 posts' },
+  { topic: '#RootRot',       count: '98 posts'  },
+];
+
+/* ─── Top Members ─── */
+const TOP_MEMBERS = [
+  { name: 'Dr. Arun Singh',  avatar: '👨‍💼', role: 'Plant Pathologist',    posts: 89 },
+  { name: 'Priya Nair',      avatar: '👩‍🌾', role: 'Expert Gardener',       posts: 67 },
+  { name: 'Ramesh Sharma',   avatar: '👨‍🌾', role: 'Tomato Specialist',     posts: 54 },
+  { name: 'Sunita Devi',     avatar: '👩‍💻', role: 'Organic Farmer',        posts: 42 },
+];
+
+/* ─── Daily Tips ─── */
+const DAILY_TIPS = [
+  '☀️ Water your plants in the morning so leaves dry before evening, preventing fungal diseases.',
+  '🌱 Add 1 tsp of Epsom salt to 1L water and spray on leaves for a magnesium boost every 2 weeks.',
+  '🧄 Garlic spray is a natural pesticide — blend 5 cloves in 1L water, steep 24 hrs, strain and spray.',
+  '✂️ Always sterilize pruning tools with 70% alcohol between plants to prevent disease spread.',
+  '🪱 Earthworms are your best friends — their castings contain 5× more nitrogen than soil.',
+];
+
+/* ─── Render Posts ─── */
+function renderPosts() {
+  const feedEl = document.getElementById('post-feed');
+  let posts = allPosts;
+  if (currentFilter !== 'all') posts = posts.filter(p => p.tag === currentFilter);
+
+  const visible = posts.slice(0, displayCount);
+
+  if (visible.length === 0) {
+    feedEl.innerHTML = '<div class="no-posts">No posts found. Be the first to post!</div>';
+    return;
+  }
+
+  const tagConfig = {
+    disease:  { class: 'post-tag-disease', label: '⚠️ Disease Report' },
+    tip:      { class: 'post-tag-tip',     label: '🌿 Plant Tip' },
+    question: { class: 'post-tag-question',label: '❓ Question' },
+    harvest:  { class: 'post-tag-harvest', label: '🌾 Harvest Win' },
+    general:  { class: 'post-tag-general', label: '💬 General' },
+  };
+
+  feedEl.innerHTML = visible.map(post => {
+    const tc = tagConfig[post.tag] || tagConfig.general;
+    const isLiked = likedPosts.includes(post.id);
+
+    return `
+      <div class="post-card card" id="post-${post.id}">
+        <div class="post-header">
+          <div class="avatar">${post.avatar}</div>
+          <div style="flex:1;">
+            <div class="post-author">${post.author}</div>
+            <div class="post-meta">${post.role} · ${post.time}</div>
+          </div>
+          <span class="post-tag ${tc.class}">${tc.label}</span>
+        </div>
+
+        ${post.hasImage ? `
+          <div class="post-image">${post.imageEmoji || '🌿'}</div>
+        ` : ''}
+
+        <div class="post-content">${post.content.replace(/\n/g, '<br>')}</div>
+
+        <div class="post-actions">
+          <button class="post-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id}, this)">
+            ${isLiked ? '❤️' : '🤍'} <span id="like-count-${post.id}">${post.likes}</span>
+          </button>
+          <button class="post-action-btn" onclick="toggleComments(${post.id}, this)">
+            💬 ${post.comments.length} Comments
+          </button>
+          <button class="post-action-btn" onclick="sharePost(${post.id})">
+            🔗 Share
+          </button>
+        </div>
+
+        <!-- Comments -->
+        <div class="comments-section" id="comments-${post.id}">
+          ${post.comments.map(c => `
+            <div class="comment">
+              <div class="comment-avatar">${c.avatar}</div>
+              <div>
+                <div class="comment-author">${c.author} <span class="comment-time">${c.time}</span></div>
+                <div class="comment-text">${c.text}</div>
+              </div>
+            </div>
+          `).join('')}
+          <div class="comment-input-row">
+            <div class="comment-avatar">🌱</div>
+            <input class="comment-input" placeholder="Write a comment..." id="comment-input-${post.id}" />
+            <button class="btn btn-primary btn-sm" onclick="addComment(${post.id})">Post</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ─── Like Toggle ─── */
+function toggleLike(postId, btn) {
+  const post = allPosts.find(p => p.id === postId);
+  if (!post) return;
+
+  const idx = likedPosts.indexOf(postId);
+  if (idx > -1) {
+    likedPosts.splice(idx, 1);
+    post.likes--;
+    btn.classList.remove('liked');
+    btn.innerHTML = `🤍 <span id="like-count-${postId}">${post.likes}</span>`;
+  } else {
+    likedPosts.push(postId);
+    post.likes++;
+    btn.classList.add('liked');
+    btn.innerHTML = `❤️ <span id="like-count-${postId}">${post.likes}</span>`;
+    btn.style.animation = 'scaleIn .3s ease';
+    setTimeout(() => btn.style.animation = '', 300);
+  }
+
+  localStorage.setItem('plantcure_likes', JSON.stringify(likedPosts));
+  savePosts();
+}
+
+/* ─── Comments ─── */
+function toggleComments(postId, btn) {
+  const section = document.getElementById('comments-' + postId);
+  if (!section) return;
+  const isOpen = section.style.display === 'block';
+  section.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('liked', !isOpen);
+}
+
+function addComment(postId) {
+  const input = document.getElementById(`comment-input-${postId}`);
+  if (!input || !input.value.trim()) return;
+
+  const post = allPosts.find(p => p.id === postId);
+  if (!post) return;
+
+  post.comments.push({
+    author: 'You 🌱',
+    avatar: '🌱',
+    text: input.value.trim(),
+    time: 'Just now',
+  });
+
+  savePosts();
+  renderPosts();
+
+  // Reopen comments
+  const section = document.getElementById('comments-' + postId);
+  if (section) section.style.display = 'block';
+  window.PlantCure?.showToast('Comment posted!', 'success', 2000);
+}
+
+/* ─── Share Post ─── */
+function sharePost(postId) {
+  const url = window.location.href + '#post-' + postId;
+  navigator.clipboard?.writeText(url).then(() => {
+    window.PlantCure?.showToast('Post link copied to clipboard!', 'success');
+  }).catch(() => {
+    window.PlantCure?.showToast('Share: ' + url, 'info', 5000);
+  });
+}
+
+/* ─── Post Composer ─── */
+function expandComposer() {
+  document.getElementById('composer-trigger').style.display = 'none';
+  document.getElementById('composer-expanded').style.display = 'block';
+  document.getElementById('post-content').focus();
+}
+
+function collapseComposer() {
+  document.getElementById('composer-trigger').style.display = '';
+  document.getElementById('composer-expanded').style.display = 'none';
+  document.getElementById('post-content').value = '';
+}
+
+function selectTag(btn, tag) {
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedTag = tag;
+}
+
+function submitPost() {
+  const content = document.getElementById('post-content')?.value.trim();
+  if (!content || content.length < 10) {
+    window.PlantCure?.showToast('Please write at least 10 characters.', 'error');
+    return;
+  }
+
+  const newPost = {
+    id: Date.now(),
+    author: 'You 🌱', avatar: '🌱', role: 'Community Member',
+    tag: selectedTag,
+    content,
+    hasImage: false,
+    time: 'Just now',
+    likes: 0,
+    comments: [],
+  };
+
+  allPosts.unshift(newPost);
+  savePosts();
+  collapseComposer();
+  renderPosts();
+  window.PlantCure?.showToast('Your post is live! 🎉', 'success');
+}
+
+/* ─── Filter ─── */
+function filterPosts(filter, btn) {
+  currentFilter = filter;
+  displayCount = 5;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPosts();
+}
+
+function loadMorePosts() {
+  displayCount += 3;
+  renderPosts();
+  window.PlantCure?.showToast('Loaded more posts!', 'info', 1500);
+}
+
+/* ─── Sidebar ─── */
+function renderSidebar() {
+  // Trending
+  const trendingEl = document.getElementById('trending-topics');
+  if (trendingEl) {
+    trendingEl.innerHTML = TRENDING.map((t, i) => `
+      <div class="trending-item" onclick="searchTopic('${t.topic}')">
+        <span class="trend-num">${i+1}</span>
+        <span class="trend-text">${t.topic}</span>
+        <span class="trend-count">${t.count}</span>
+      </div>
+    `).join('');
+  }
+
+  // Members
+  const membersEl = document.getElementById('top-members');
+  if (membersEl) {
+    membersEl.innerHTML = TOP_MEMBERS.map(m => `
+      <div class="member-row">
+        <div class="member-avatar">${m.avatar}</div>
+        <div>
+          <div class="member-name">${m.name}</div>
+          <div class="member-role">${m.role} · ${m.posts} posts</div>
+        </div>
+        <button class="btn btn-sm btn-secondary member-follow" onclick="followMember('${m.name}', this)">Follow</button>
+      </div>
+    `).join('');
+  }
+
+  // Daily tip
+  const tipEl = document.getElementById('daily-tip');
+  if (tipEl) {
+    const idx = new Date().getDate() % DAILY_TIPS.length;
+    tipEl.textContent = DAILY_TIPS[idx];
+  }
+}
+
+function searchTopic(topic) {
+  window.PlantCure?.showToast(`Searching for ${topic}...`, 'info', 1500);
+}
+
+function followMember(name, btn) {
+  btn.textContent = btn.textContent === 'Follow' ? '✓ Following' : 'Follow';
+  btn.classList.toggle('btn-secondary');
+  btn.classList.toggle('btn-ghost');
+  if (btn.textContent === '✓ Following') {
+    window.PlantCure?.showToast(`Now following ${name}!`, 'success', 2000);
+  }
+}
+
+/* ─── Save Posts ─── */
+function savePosts() {
+  localStorage.setItem('plantcure_posts', JSON.stringify(allPosts.slice(0, 20)));
+}
+
+/* ─── Init ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderPosts();
+  renderSidebar();
+});
+</script>
+</body>
+</html>
