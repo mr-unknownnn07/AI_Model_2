@@ -4,7 +4,15 @@ from PIL import Image
 import io
 import json
 import os
-import tf_keras as keras
+
+# Try to import tflite_runtime, fallback to tensorflow if needed
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    try:
+        import tensorflow.lite as tflite
+    except ImportError:
+        tflite = None
 
 # Path to the UI folder
 UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Plant-Disease-Detection-main")
@@ -12,7 +20,7 @@ UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Plant-Disease
 app = Flask(__name__, static_folder=UI_DIR, static_url_path="")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model_keras.h5")
+MODEL_PATH = os.path.join(BASE_DIR, "model.tflite")
 METADATA_PATH = os.path.join(BASE_DIR, "model", "metadata.json")
 
 # 1. Load labels from metadata.json
@@ -25,14 +33,23 @@ else:
     LABELS = ["HEALTHY", "VIRAL DISEASE", "BACTERIAL DISEASE", "FUNGLE DISEASE"]
     IMAGE_SIZE = 224
 
-# 2. Load the converted Keras model
-print("Loading model from model_keras.h5...")
-try:
-    model = keras.models.load_model(MODEL_PATH, compile=False)
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
+# 2. Load the TFLite model
+print(f"Loading TFLite model from {MODEL_PATH}...")
+interpreter = None
+input_details = None
+output_details = None
+
+if tflite:
+    try:
+        interpreter = tflite.Interpreter(model_path=MODEL_PATH)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        print("TFLite Model loaded successfully!")
+    except Exception as e:
+        print(f"Error loading TFLite model: {e}")
+else:
+    print("Error: TFLite runtime not found!")
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 def preprocess_image(image: Image.Image) -> np.ndarray:
@@ -44,8 +61,8 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    if model is None:
-        return jsonify({"error": "Model not loaded"}), 500
+    if interpreter is None:
+        return jsonify({"error": "TFLite model not loaded"}), 500
         
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
@@ -56,8 +73,12 @@ def predict():
     except Exception as e:
         return jsonify({"error": f"Invalid image file: {e}"}), 400
 
-    processed   = preprocess_image(image)
-    predictions = model.predict(processed)[0]
+    processed = preprocess_image(image)
+
+    # TFLite Inference
+    interpreter.set_tensor(input_details[0]['index'], processed)
+    interpreter.invoke()
+    predictions = interpreter.get_tensor(output_details[0]['index'])[0]
 
     predicted_index = int(np.argmax(predictions))
     predicted_label = LABELS[predicted_index]
@@ -66,12 +87,13 @@ def predict():
     all_scores = {LABELS[i]: round(float(predictions[i]) * 100, 2)
                    for i in range(len(LABELS))}
 
-    # Format label for frontend mapping (Healthy, Viral Disease, etc.)
+    # Format label for frontend mapping
     def format_label(lbl):
-        if lbl == "HEALTHY": return "Healthy"
-        if lbl == "VIRAL DISEASE": return "Viral Disease"
-        if lbl == "BACTERIAL DISEASE": return "Bacterial Disease"
-        if lbl == "FUNGLE DISEASE" or lbl == "FUNGAL DISEASE": return "Fungal Disease"
+        l = lbl.upper()
+        if "HEALTHY" in l: return "Healthy"
+        if "VIRAL" in l: return "Viral Disease"
+        if "BACTERIAL" in l: return "Bacterial Disease"
+        if "FUNGLE" in l or "FUNGAL" in l: return "Fungal Disease"
         return lbl
 
     return jsonify({
@@ -85,11 +107,9 @@ def predict():
 def home():
     return send_from_directory(UI_DIR, "index.html")
 
-# Serve other HTML files (detect.html, treatment.html, etc.)
+# Serve other HTML files
 @app.route("/<path:path>")
 def serve_static(path):
-    if path.endswith(".html"):
-        return send_from_directory(UI_DIR, path)
     return send_from_directory(UI_DIR, path)
 
 if __name__ == "__main__":
