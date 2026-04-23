@@ -361,7 +361,10 @@ async function runPrediction() {
       body: formData
     });
 
-    if (!response.ok) throw new Error("Backend error: " + response.statusText);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend Error (${response.status}): ${errorText || response.statusText}`);
+    }
 
     const data = await response.json();
 
