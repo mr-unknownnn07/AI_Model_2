@@ -15,7 +15,7 @@ except ImportError:
         tflite = None
 
 # Path to the UI folder
-UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Plant-Disease-Detection-main")
+UI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")
 
 app = Flask(__name__, static_folder=UI_DIR, static_url_path="")
 
