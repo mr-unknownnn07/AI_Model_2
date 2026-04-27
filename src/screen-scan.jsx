@@ -1,5 +1,5 @@
 /* global React */
-/* Scan flow — drop zone → detecting → result drawer */
+/* Scan flow — upgraded to sync with Home page logic and real history */
 
 const { useState: sS, useEffect: sE, useRef: sR } = React;
 
@@ -7,12 +7,73 @@ function ScreenScan({ onNav, push }) {
   const K = window.KineticText; const TC = window.TiltCard; const RV = window.Reveal;
   const Blob = window.MorphBlob;
 
+  // Icons fallbacks
+  const IcoUpload = window.IcoUpload || (() => null);
+  const IcoClock = window.IcoClock || (() => null);
+  const IcoCamera = window.IcoCamera || (() => null);
+  const IcoArrowR = window.IcoArrowR || (() => null);
+
   const [stage, setStage] = sS('idle'); // idle | analyzing | result
   const [progress, setProgress] = sS(0);
   const [hover, setHover] = sS(false);
   const [resultData, setResultData] = sS(null);
   const [imgUrl, setImgUrl] = sS(null);
   const fileInputRef = sR(null);
+  const [history, setHistory] = sS([]);
+
+  // Load history from localStorage
+  sE(() => {
+    try {
+      const saved = localStorage.getItem('plantcure_history');
+      if (saved) setHistory(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
+  const generateThumbnail = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 200;
+          const scale = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const saveToHistory = async (data, file) => {
+    const thumbnail = await generateThumbnail(file);
+
+    let severity = 'Medium';
+    if (data.isHealthy) severity = 'Low';
+    else if (data.name.includes('Blight') || data.name.includes('Wilt') || data.name.includes('Rot')) severity = 'High';
+
+    const newItem = {
+      id: Date.now(),
+      n: data.name,
+      c: data.confidence,
+      t: new Date().toLocaleString(),
+      thumb: thumbnail,
+      isHealthy: data.isHealthy,
+      severity,
+      treatment: data.isHealthy ? 'No treatment needed.' : 'Prune infected leaves and apply appropriate fungicide/organic remedy.',
+      badge: data.isHealthy ? 'Healthy' : (data.name.includes('Fungal') ? 'Fungal' : (data.name.includes('Bacterial') ? 'Bacterial' : 'Viral'))
+    };
+    const updated = [newItem, ...history].slice(0, 5);
+    setHistory(updated);
+    try {
+      localStorage.setItem('plantcure_history', JSON.stringify(updated));
+    } catch (e) {}
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -37,12 +98,14 @@ function ScreenScan({ onNav, push }) {
       setProgress(1);
       
       setTimeout(() => {
-        setResultData({
+        const resData = {
           name: data.prediction,
           confidence: data.confidence,
           isHealthy: data.prediction.toLowerCase() === 'healthy',
           imgUrl: localUrl
-        });
+        };
+        setResultData(resData);
+        saveToHistory(resData, file);
         setStage('result');
         push && push({ icon: '✨', title: 'Diagnosis ready', desc: `${data.prediction} · ${data.confidence}% confidence` });
       }, 500);
@@ -99,12 +162,12 @@ function ScreenScan({ onNav, push }) {
               {stage === 'idle' && (
                 <>
                   <LeafDrop hover={hover} />
-                  <div className="display" style={{ fontSize: 42, marginTop: 22, position: 'relative' }}>Drop a leaf here</div>
-                  <div style={{ color: 'var(--ink-2)', marginTop: 8, position: 'relative' }}>…or paste, or upload. JPG / PNG, up to 10 MB.</div>
+                  <div className="display" style={{ fontSize: 42, marginTop: 22, position: 'relative' }}>Analyze Plant Health</div>
+                  <div style={{ color: 'var(--ink-2)', marginTop: 8, position: 'relative' }}>Drop a leaf image here or click to upload. JPG / PNG, up to 10 MB.</div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 24, position: 'relative' }}>
                     <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
-                    <button className="btn btn-primary" onClick={triggerUpload}><window.IcoUpload size={15} /> Upload leaf</button>
-                    <button className="btn btn-ghost" onClick={triggerUpload}><window.IcoCamera size={15} /> Use camera</button>
+                    <button className="btn btn-primary" onClick={triggerUpload} style={{ fontSize: 16, padding: '14px 24px' }}><IcoUpload size={18} /> Upload Image</button>
+                    <button className="btn btn-ghost" onClick={triggerUpload} style={{ fontSize: 16, padding: '14px 24px' }}><IcoCamera size={18} /> Use camera</button>
                   </div>
                   <div className="mono" style={{ marginTop: 20, fontSize: 11, color: 'var(--sage-600)', position: 'relative' }}>100% local · nothing uploaded</div>
                 </>
@@ -114,7 +177,7 @@ function ScreenScan({ onNav, push }) {
                 <>
                   <ScanningLeaf progress={progress} />
                   <div className="display" style={{ fontSize: 42, marginTop: 22, position: 'relative' }}>
-                    {progress < 0.3 ? 'Looking at leaf…' : progress < 0.6 ? 'Reading symptoms…' : progress < 0.9 ? 'Matching disease…' : 'Cross-checking…'}
+                    {progress < 0.25 ? 'Scanning leaf texture...' : progress < 0.5 ? 'Comparing disease patterns...' : progress < 0.75 ? 'Running AI diagnosis...' : 'Generating treatment guidance...'}
                   </div>
                   <div style={{ width: 280, marginTop: 18, position: 'relative' }}>
                     <div style={{ height: 4, background: 'rgba(33,71,19,0.1)', borderRadius: 99, overflow: 'hidden' }}>
@@ -150,22 +213,20 @@ function ScreenScan({ onNav, push }) {
             </div>
 
             <div className="glass" style={{ padding: 22 }}>
-              <span className="eyebrow">recent scans</span>
-              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {[
-                  { n: 'Rose · black spot', c: '91%', t: '2h ago', color: '#C25477' },
-                  { n: 'Basil · healthy', c: '99%', t: 'yesterday', color: '#6B944C' },
-                  { n: 'Tomato · early blight', c: '87%', t: '3d ago', color: '#E07856' },
-                ].map((h, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 8, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(33,71,19,0.06)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: h.color }} />
+              <span className="eyebrow">past scan history</span>
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {history.length > 0 ? history.map((h) => (
+                  <div key={h.id} className="hover-scale" style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 8, borderRadius: 10, cursor: 'pointer', transition: 'background 0.2s', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: `url(${h.thumb}) center/cover no-repeat` }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13 }}>{h.n}</div>
-                      <div style={{ fontSize: 11, color: 'var(--sage-600)' }}>{h.t}</div>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{h.n}</div>
+                      <div style={{ fontSize: 10, color: 'var(--ink-dim)' }}>{h.t}</div>
                     </div>
-                    <span className="mono" style={{ fontSize: 11, color: 'var(--sage-700)' }}>{h.c}</span>
+                    <div className="mono" style={{ fontSize: 10, color: 'var(--sage-500)' }}>{h.c}%</div>
                   </div>
-                ))}
+                )) : (
+                  <div style={{ padding: 20, textAlign: 'center', color: 'var(--sage-600)', fontSize: 12 }}>No recent scans found.</div>
+                )}
               </div>
             </div>
           </RV>
@@ -219,11 +280,13 @@ function ResultView({ onNav, onRescan, resultData, imgUrl }) {
   const isHealthy = resultData?.isHealthy;
   const name = resultData?.name || 'Leaf Rust';
   const conf = resultData?.confidence || '94';
+  
+  const IcoArrowR = window.IcoArrowR || (() => null);
 
   return (
     <div style={{ position: 'relative', width: '100%', animation: 'rise 0.6s var(--ease-spring)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 24, alignItems: 'center' }}>
-        <div className="ph" style={{ height: 260, background: imgUrl ? `url(${imgUrl}) center/cover no-repeat` : undefined }}>
+        <div className="ph" style={{ height: 260, borderRadius: 12, background: imgUrl ? `url(${imgUrl}) center/cover no-repeat` : undefined }}>
           {!imgUrl && <span>uploaded · leaf.jpg</span>}
         </div>
         <div style={{ textAlign: 'left' }}>
@@ -246,30 +309,8 @@ function ResultView({ onNav, onRescan, resultData, imgUrl }) {
             ))}
           </div>
 
-          {!isHealthy && (
-            <div style={{ marginTop: 22, padding: 16, background: 'var(--glass)', borderRadius: 12 }}>
-              <div className="eyebrow" style={{ marginBottom: 10 }}>Quick Action Plan</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--sage-500)', marginBottom: 6 }}>Natural Remedies</div>
-                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--ink-2)' }}>
-                    <li>Prune infected leaves</li>
-                    <li>Neem oil / Baking soda</li>
-                  </ul>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--sun)', marginBottom: 6 }}>Medicines</div>
-                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--ink-2)' }}>
-                    <li>Copper-based fungicide</li>
-                    <li>Systemic treatments</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-            <button className="btn btn-primary" onClick={() => onNav('treatment', resultData)}>See treatment <window.IcoArrowR size={14} /></button>
+            <button className="btn btn-primary" onClick={() => onNav('treatment', resultData)}>See treatment <IcoArrowR size={14} /></button>
             <button className="btn btn-ghost" onClick={onRescan}>Scan another</button>
           </div>
         </div>

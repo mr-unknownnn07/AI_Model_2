@@ -171,6 +171,7 @@ input, textarea, select { font: inherit; color: inherit; }
   border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.3);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-out), background 0.3s;
 }
 .glass-strong {
   background: linear-gradient(135deg, rgba(255,255,240,0.09), rgba(155,203,111,0.04));
@@ -179,6 +180,13 @@ input, textarea, select { font: inherit; color: inherit; }
   border: 1px solid var(--glass-border-strong);
   border-radius: var(--r-lg);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-out);
+}
+
+.hover-scale:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--sh-lg), var(--sh-glow);
+  border-color: var(--sage-500);
 }
 
 /* ── Chip ── */
@@ -213,6 +221,11 @@ input, textarea, select { font: inherit; color: inherit; }
   text-transform: uppercase;
   position: relative;
   overflow: hidden;
+  transition: transform 0.4s var(--ease-out), filter 0.4s;
+}
+.ph:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 .ph > span { background: rgba(8,15,12,0.85); padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid var(--glass-border); color: var(--sage-500); }
 
@@ -404,3 +417,175 @@ body::before {
   overflow: hidden;
 }
 .ambient-blobs svg { position: absolute; will-change: transform; }
+
+/* ──────────────────────────────────────────────
+   MOBILE & TABLET RESPONSIVE OVERRIDES
+   ────────────────────────────────────────────── */
+
+@media screen and (max-width: 900px) {
+  /* Layout & App Shell */
+  .app {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .rail {
+    position: relative !important;
+    height: auto !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding: 12px 16px !important;
+    gap: 16px !important;
+    background: var(--glass-strong) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+  }
+
+  .nav {
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+    padding: 10px 16px !important;
+  }
+
+  .brand {
+    padding-right: 20px;
+    border-right: 1px solid var(--glass-border);
+    margin-right: 10px;
+  }
+
+  .nav-sub {
+    display: none !important;
+  }
+
+  .wrap {
+    padding: 0 16px 80px !important;
+  }
+
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Grid Layouts Stacking - catch-all for grid templates */
+  [style*="display: grid"], 
+  [style*="display:grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* Override column spans */
+  [style*="grid-column: span"],
+  [style*="grid-column:span"] {
+    grid-column: span 1 / span 1 !important;
+  }
+
+  /* Typography Scaling */
+  .display {
+    font-size: clamp(32px, 8vw, 48px) !important;
+    line-height: 1.1 !important;
+  }
+
+  h1.display {
+    font-size: clamp(40px, 10vw, 64px) !important;
+    text-align: center;
+  }
+
+  .sec-header h2 {
+    font-size: clamp(28px, 6vw, 36px) !important;
+  }
+
+  /* Component specific overrides */
+  .glass-strong, .glass {
+    padding: 24px !important;
+  }
+
+  /* Scanner & Result Views - Force 1 col */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Center buttons and content in scanner */
+  .glass-strong[style*="display: flex"][style*="flex-direction: column"],
+  .glass[style*="display: flex"][style*="flex-direction: column"] {
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  [style*="display: flex"][style*="gap: 10"],
+  [style*="display: flex"][style*="gap: 12"],
+  [style*="display: flex"][style*="gap: 14"] {
+    justify-content: center !important;
+    flex-wrap: wrap;
+  }
+
+  /* Image Thumbnails & PH */
+  .ph {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 220px !important;
+  }
+
+  [style*="width: 280"] {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  /* Phone-specific refinements */
+  .topbar {
+    margin: 8px 12px !important;
+    flex-wrap: wrap;
+  }
+
+  .topbar .search {
+    order: 2;
+    width: 100%;
+  }
+
+  .sec-header {
+    padding: 24px 16px 12px !important;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start !important;
+  }
+
+  .brand {
+    font-size: 22px !important;
+    border: none;
+  }
+
+  /* Hero Section adjustment */
+  section[style*="min-height: 92vh"] {
+    min-height: auto !important;
+    padding: 20px 16px 60px !important;
+  }
+
+  /* Full width buttons on phone */
+  .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Stats and Boxes */
+  [style*="grid-template-columns: repeat"],
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Marquee sizing */
+  [style*="font-size: 28"] {
+    font-size: 18px !important;
+  }
+  
+  /* Modal sizing */
+  [style*="width: 440"] {
+    width: 95vw !important;
+    padding: 20px !important;
+  }
+}
+
+

@@ -13,6 +13,7 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
   const DISEASE_DB = {
     'Viral Disease': {
       desc: 'Yellowing, mosaic patterns, or stunted growth. Viruses cannot be cured, only managed.',
+      why: 'Viruses are typically transmitted by insect vectors like aphids or whiteflies, or through contaminated tools and seeds.',
       symptoms: [
         { t: 'Mosaic Patterns', d: 'Mottled yellow or green leaves.', c: true },
         { t: 'Stunted Growth', d: 'Plant fails to reach full size.', c: true },
@@ -25,10 +26,16 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
       ],
       pro: [
         { k: 'vp1', t: 'Pesticide for vectors', d: 'Apply systemic insecticide to kill disease-carrying pests.', tag: 'Chem' }
+      ],
+      prevention: [
+        'Control weed populations around the garden as they can host viruses.',
+        'Use reflective mulches to deter insect vectors.',
+        'Always disinfect pruning shears between cuts using 70% rubbing alcohol.'
       ]
     },
     'Bacterial Disease': {
       desc: 'Water-soaked spots, wilting, or oozing lesions. Bacteria spread through water and tools.',
+      why: 'Bacterial pathogens enter plants through natural openings or wounds. They thrive in warm, humid conditions and are often spread by splashing rain or overhead irrigation.',
       symptoms: [
         { t: 'Water-soaked Spots', d: 'Dark, greasy-looking areas.', c: true },
         { t: 'Wilting Leaves', d: 'Loss of rigidity, drooping.', c: true },
@@ -42,10 +49,16 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
       pro: [
         { k: 'bp1', t: 'Copper Bactericide', d: 'Apply copper sulfate spray to protect healthy foliage.', tag: 'Chem' },
         { k: 'bp2', t: 'Antibiotic spray', d: 'Streptomycin or Oxytetracycline for severe cases.', tag: 'Chem' }
+      ],
+      prevention: [
+        'Ensure proper spacing between plants to improve air circulation.',
+        'Water at the base of the plant early in the morning.',
+        'Remove and destroy all plant debris at the end of the season.'
       ]
     },
     'Fungal Disease': {
       desc: 'Powdery mildew, rust, or dark spots. Thrives in warm, humid weather with poor airflow.',
+      why: 'Fungal spores are carried by the wind, water splashes, or on insects. They infect plants when the foliage remains wet for extended periods or in high humidity environments.',
       symptoms: [
         { t: 'Powdery / Orange Spots', d: 'Discoloration on leaves.', c: true },
         { t: 'Yellow Halo', d: 'Surrounding affected area.', c: true },
@@ -60,6 +73,11 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
       pro: [
         { k: 'fp1', t: 'Copper-based fungicide', d: 'Mancozeb 75% WP. Apply 2g/L every 10 days.', tag: 'Chem' },
         { k: 'fp2', t: 'Systemic fungicide', d: 'Propiconazole 25% EC. Apply on a cool dry morning.', tag: 'Chem' }
+      ],
+      prevention: [
+        'Apply a layer of mulch to prevent soil-borne spores from splashing onto lower leaves.',
+        'Avoid working in the garden when plants are wet.',
+        'Choose disease-resistant plant varieties when available.'
       ]
     }
   };
@@ -109,30 +127,43 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
             <div style={{ position: 'absolute', top: -100, right: -80 }}>
               <Blob size={380} color="rgba(245,198,78,0.22)" duration={14} />
             </div>
-            <div className="ph" style={{ height: 280, position: 'relative', zIndex: 1, background: navData?.imgUrl ? `url(${navData.imgUrl}) center/cover no-repeat` : undefined }}>
+            <div className="ph" style={{ height: 320, position: 'relative', zIndex: 1, background: navData?.imgUrl ? `url(${navData.imgUrl}) center/cover no-repeat` : undefined }}>
               {!navData?.imgUrl && <span>affected · leaf</span>}
               {[{x:30,y:40,r:18},{x:60,y:55,r:14},{x:45,y:70,r:12},{x:70,y:30,r:10}].map((s,i) => (
                 <div key={i} style={{ position: 'absolute', left: `${s.x}%`, top: `${s.y}%`, width: s.r*2, height: s.r*2, transform: 'translate(-50%,-50%)', borderRadius: '50%', border: '2px solid var(--clay)', boxShadow: '0 0 12px rgba(224,120,86,0.5)', animation: `pulse 2s ${i*0.3}s infinite` }} />
               ))}
             </div>
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <span className="eyebrow">symptoms spotted</span>
-              {!isHealthy ? (
-                dbEntry.symptoms.map((s, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '24px 1fr', gap: 10, padding: '10px 0', borderTop: i ? '1px dashed var(--glass-border)' : 'none' }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: s.c ? 'var(--clay)' : 'rgba(33,71,19,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {s.c && <window.IcoCheck size={10} style={{ color: '#fff' }} />}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 500 }}>{s.t}</div>
-                      <div style={{ fontSize: 12, color: 'var(--sage-600)' }}>{s.d}</div>
-                    </div>
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <span className="eyebrow" style={{ color: 'var(--sage-600)' }}>1. Symptoms Identified</span>
+                {!isHealthy ? (
+                  <div style={{ marginTop: 10 }}>
+                    {dbEntry.symptoms.map((s, i) => (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '24px 1fr', gap: 10, padding: '8px 0', borderTop: i ? '1px dashed var(--glass-border)' : 'none' }}>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: s.c ? 'var(--clay)' : 'rgba(33,71,19,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {s.c && <window.IcoCheck size={10} style={{ color: '#fff' }} />}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500 }}>{s.t}</div>
+                          <div style={{ fontSize: 12, color: 'var(--sage-600)' }}>{s.d}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <div style={{ padding: '10px 0' }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>No symptoms</div>
-                  <div style={{ fontSize: 12, color: 'var(--sage-600)' }}>Plant appears completely healthy.</div>
+                ) : (
+                  <div style={{ padding: '10px 0' }}>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>No symptoms</div>
+                    <div style={{ fontSize: 12, color: 'var(--sage-600)' }}>Plant appears completely healthy.</div>
+                  </div>
+                )}
+              </div>
+
+              {!isHealthy && (
+                <div>
+                  <span className="eyebrow" style={{ color: 'var(--sage-600)' }}>2. Why This Happens</span>
+                  <div style={{ marginTop: 10, padding: 14, background: 'rgba(255,253,247,0.5)', borderRadius: 12, border: '1px solid var(--glass-border)' }}>
+                    <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: 0, lineHeight: 1.5 }}>{dbEntry.why}</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -141,31 +172,34 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
 
         {/* Tabs */}
         <RV delay={0.2}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
-            {[
-              { id: 'natural', label: 'Natural', desc: '150+ remedies' },
-              { id: 'professional', label: 'Professional', desc: '50+ plans' },
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={tab === t.id ? 'glass-strong' : 'glass'}
-                style={{
-                  padding: '14px 22px',
-                  borderRadius: 'var(--r-pill)',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  transform: tab === t.id ? 'scale(1.02)' : 'scale(1)',
-                  transition: 'transform 0.3s var(--ease-spring), background 0.3s',
-                }}
-              >
-                <span style={{ fontFamily: 'var(--f-display)', fontSize: 22 }}>{t.label}</span>
-                <span className="chip" style={{ fontSize: 10, padding: '2px 8px' }}>{t.desc}</span>
-              </button>
-            ))}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="mono" style={{ fontSize: 12, color: 'var(--sage-600)' }}>{done}/{list.length} done</div>
-              <div style={{ width: 120, height: 6, borderRadius: 99, background: 'rgba(33,71,19,0.1)', overflow: 'hidden' }}>
-                <div style={{ width: `${(done/list.length)*100}%`, height: '100%', background: 'linear-gradient(90deg, var(--sage-500), var(--sun))', transition: 'width 0.5s var(--ease-spring)' }} />
+          <div style={{ marginBottom: 20 }}>
+            <span className="eyebrow" style={{ display: 'block', marginBottom: 16, color: 'var(--sage-600)' }}>3. Recommended Treatment</span>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {[
+                { id: 'natural', label: 'Natural', desc: '150+ remedies' },
+                { id: 'professional', label: 'Professional', desc: '50+ plans' },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={tab === t.id ? 'glass-strong' : 'glass'}
+                  style={{
+                    padding: '14px 22px',
+                    borderRadius: 'var(--r-pill)',
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    transform: tab === t.id ? 'scale(1.02)' : 'scale(1)',
+                    transition: 'transform 0.3s var(--ease-spring), background 0.3s',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--f-display)', fontSize: 22 }}>{t.label}</span>
+                  <span className="chip" style={{ fontSize: 10, padding: '2px 8px' }}>{t.desc}</span>
+                </button>
+              ))}
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="mono" style={{ fontSize: 12, color: 'var(--sage-600)' }}>{done}/{list.length} done</div>
+                <div style={{ width: 120, height: 6, borderRadius: 99, background: 'rgba(33,71,19,0.1)', overflow: 'hidden' }}>
+                  <div style={{ width: `${(list.length > 0 ? (done/list.length) : 0)*100}%`, height: '100%', background: 'linear-gradient(90deg, var(--sage-500), var(--sun))', transition: 'width 0.5s var(--ease-spring)' }} />
+                </div>
               </div>
             </div>
           </div>
@@ -193,6 +227,28 @@ function ScreenTreatment({ onNav, push, navData, cart, setCart }) {
             </RV>
           ))}
         </div>
+        
+        {/* Prevention Tips */}
+        {!isHealthy && dbEntry.prevention && (
+          <RV delay={0.3}>
+            <div style={{ marginTop: 40, padding: 24, borderRadius: 'var(--r-lg)', background: 'linear-gradient(135deg, rgba(146,181,110,0.1), rgba(33,71,19,0.02))', border: '1px solid var(--glass-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--sage-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <window.IcoSparkle size={20} />
+                </div>
+                <div>
+                  <span className="eyebrow" style={{ color: 'var(--sage-600)', display: 'block', marginBottom: 2 }}>4. Prevention Tips</span>
+                  <h3 className="display" style={{ fontSize: 24, margin: 0 }}>Keep it from coming back.</h3>
+                </div>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {dbEntry.prevention.map((tip, idx) => (
+                  <li key={idx} style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.5 }}>{tip}</li>
+                ))}
+              </ul>
+            </div>
+          </RV>
+        )}
 
         {/* Recommended Pharmacy Products */}
         {!isHealthy && (

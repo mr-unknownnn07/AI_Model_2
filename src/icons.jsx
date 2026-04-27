@@ -33,10 +33,12 @@ const IcoFilter = (p) => <Ico {...p} d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z" />;
 const IcoCheck = (p) => <Ico {...p} d="m20 6-11 11-5-5" />;
 const IcoChart = (p) => <Ico {...p} d="M3 3v18h18M7 16l4-4 4 4 5-5" />;
 const IcoBook = (p) => <Ico {...p} d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15Z" />;
+const IcoClock = (p) => <Ico {...p} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />;
+const IcoHistory = (p) => <Ico {...p} d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0 0V3m0 5h5" />;
 
 Object.assign(window, {
   IcoHome, IcoLeaf, IcoScan, IcoPill, IcoShop, IcoUsers, IcoSearch, IcoBell,
   IcoArrowR, IcoArrowUR, IcoPlus, IcoClose, IcoUpload, IcoCamera, IcoSparkle,
   IcoDroplet, IcoSun, IcoThermo, IcoHeart, IcoMsg, IcoBookmark, IcoGrid, IcoStar,
-  IcoFilter, IcoCheck, IcoChart, IcoBook
+  IcoFilter, IcoCheck, IcoChart, IcoBook, IcoClock, IcoHistory
 });
